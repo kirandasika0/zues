@@ -1,0 +1,23 @@
+apiVersion: v1alpha1
+type: ConfigSpec
+spec:
+  name: candidate-service
+  namespace: test
+  maxBuildErrors: 100
+  maxRetries: 3
+  gatherSatistics: true
+  notify: true
+  startupProbe:
+    spec:
+      serverType: "http"
+      port: 80
+      endpoint: "/healthz"
+      initialStartupDelay: 60
+      retryThreshold: 3
+      validResponseCode:
+        - 200
+        - 201
+  rollback:
+    spec:
+      rollbackImage: "acrQat.azurecr.io/candidate-service:rollback_tag"
+      adminNotify: true
