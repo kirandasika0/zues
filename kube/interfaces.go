@@ -43,18 +43,15 @@ func (s *K8sSession) Execute() error {
 	return nil
 }
 
+func (s *K8sSession) registerAPICall() {
+	s.APICalls++
+}
+
 // Kill destroys the current K8s session that is running in the background
 func (s *K8sSession) Kill() error {
 	// TODO : add more functionality
 
 	return nil
-}
-
-// CreateNewPodWithNamespace create a pod by calling the K8s API.
-func (s *K8sSession) CreateNewPodWithNamespace(namespace string, podName string) Pod {
-	// TODO send a post request to K8s api to create a pod
-
-	return Pod{}
 }
 
 // GetPodsFromAPIServer gets pod info from json string
@@ -69,6 +66,8 @@ func (s *K8sSession) GetPodsFromAPIServer(jsonStr []byte) ([]Pod, error) {
 		_ = json.Unmarshal([]byte(item.String()), &newPod)
 		pods = append(pods, newPod)
 	}
+
+	s.registerAPICall()
 
 	return pods, nil
 }
@@ -90,6 +89,8 @@ func (s *K8sSession) GetServicesFromAPIServer(jsonStr []byte) (*Services, error)
 		_ = json.Unmarshal([]byte(item.String()), &s)
 		services.Items = append(services.Items, s)
 	}
+
+	s.registerAPICall()
 
 	return &services, nil
 }
@@ -120,6 +121,8 @@ func (s *K8sSession) CreatePodWithNamespace(podData []byte, namespace string) (P
 
 	// Unmarshal the JSON returned by the K8s API
 	json.Unmarshal(resp, &newPod)
+
+	s.registerAPICall()
 
 	return newPod, nil
 }
@@ -162,5 +165,7 @@ func (s *K8sSession) DeletePodWithNamespace(podName string, namespace string, ui
 	}
 
 	json.Unmarshal(resp, &deletedPod)
+
+	s.registerAPICall()
 	return deletedPod, nil
 }
