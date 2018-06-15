@@ -12,10 +12,10 @@ var (
 // K8sSession describe all the parameters need to keep a valid connection
 // to the Kubernetes server
 type K8sSession struct {
-	ServerAddress  string            `json:"server_address"`
-	ServerPort     uint16            `json:"server_port"`
-	ServerBaseURL  string            `json:"server_base_url"`
-	AccessToken    string            `json:"access_token"`
+	ServerAddress  string            `json:"serverAddress"`
+	ServerPort     uint16            `json:"serverPort"`
+	ServerBaseURL  string            `json:"serverBaseUrl"`
+	AccessToken    string            `json:"accessToken"`
 	APICalls       uint64            `json:"apiCalls"`
 	DefaultHeaders map[string]string `json:"defaultHeaders"`
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"zues/kube"
+	"zues/util"
 
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
@@ -19,6 +20,7 @@ var (
 type Server struct {
 	Application   *iris.Application  `json:"-"`
 	Port          string             `json:"port"`
+	ServerID      string             `json:"serverId"`
 	Configuration iris.Configuration `json:"-"`
 	K8sSession    *kube.K8sSession   `json:"k8sSession"`
 }
@@ -45,6 +47,8 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	} else {
 		s.Port = serverPort
 	}
+
+	s.ServerID = "zues-master-" + util.RandomString(8)
 
 	return &s
 }

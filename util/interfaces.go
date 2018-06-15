@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -14,6 +15,12 @@ import (
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var seededRand *rand.Rand = rand.New(
+	rand.NewSource(time.Now().UnixNano()))
 
 // GetHTTPBody is a method that queries a HTTP endpoint and get the body
 func GetHTTPBody(server string, endpoint string) ([]byte, error) {
@@ -142,4 +149,17 @@ func DecodeBase64(dataToDecode string) []byte {
 		return []byte("")
 	}
 	return decodedStr
+}
+
+func stringWithCharset(length int, charset string) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// RandomString return a string of fixed length
+func RandomString(length int) string {
+	return stringWithCharset(length, charset)
 }
