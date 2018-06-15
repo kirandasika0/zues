@@ -3,6 +3,7 @@ package stest
 import (
 	"fmt"
 	"sync"
+	"time"
 	"zues/util"
 
 	"github.com/kataras/golog"
@@ -31,13 +32,27 @@ func SetupStressTestEnvironment(server string, endpoint string, iterations int) 
 	// running computeStatistics as a go routine go avoid deadlock
 	go computeStatistics(bodyDataCh)
 
-	for i := 0; i < iterations; i++ {
-		wg.Add(1)
-		go runSingleStressTest(server, endpoint, bodyDataCh)
+	// Calculate start time
+	startTime := int(time.Now().UTC().UnixNano())
+
+	// If lees than 100 requests to perform just run everything at once.
+	if iterations <= 100 {
+		for i := 0; i < iterations; i++ {
+			wg.Add(1)
+			go runSingleStressTest(server, endpoint, bodyDataCh)
+		}
+	} else {
+		// TODO  Release the goroutines in batches
+		for i := 0; i < iterations; i++ {
+			wg.Add(1)
+			go runSingleStressTest(server, endpoint, bodyDataCh)
+		}
 	}
 
 	wg.Wait()
-	golog.Print(fmt.Sprintf("Completed %d stress test on url: %s", completeCount+1, server+endpoint))
+	endTime := int(time.Now().UTC().UnixNano())
+	elapsedTime := endTime - startTime
+	golog.Print(fmt.Sprintf("Completed %d stress test on url: %s took %d ms", completeCount+1, server+endpoint, (elapsedTime / 1000000)))
 	close(bodyDataCh)
 	return buffer
 }
