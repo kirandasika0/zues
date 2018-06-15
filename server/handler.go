@@ -77,6 +77,11 @@ func getServices(ctx iris.Context) {
 }
 
 func createPodHandler(ctx iris.Context) {
+	// Steps to create a pod on a cluster
+	// 1. Create a unique name for the pod
+	// 2. Check if the namespace is specified in the request
+	// 3. Default to the namespace specified in the zues setup config
+	// 4. Save metadata returned from the K8s API in a base64 style
 	requestData, err := ioutil.ReadAll(ctx.Request().Body)
 	if err != nil {
 		golog.Error(err)
@@ -97,10 +102,7 @@ func createPodHandler(ctx iris.Context) {
 		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 	}
 
-	var tempData interface{}
-	json.Unmarshal(resp, &tempData)
-
-	util.BuildResponse(ctx, tempData, false)
+	util.BuildResponse(ctx, util.EncodeBase64(resp), false)
 }
 
 func serverInfoHandler(ctx iris.Context) {

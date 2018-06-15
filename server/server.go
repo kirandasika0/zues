@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// ZuesServer Global ZuesServer instance
 	ZuesServer *Server
 )
 
