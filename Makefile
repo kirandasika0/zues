@@ -3,3 +3,6 @@ build:
 
 run:
 	make build
+	./main
+clean:
+	rm main

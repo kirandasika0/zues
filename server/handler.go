@@ -1,18 +1,18 @@
 package server
 
 import (
-	"zues/util"
-	"github.com/kataras/iris"
-	"github.com/kataras/golog"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"strconv"
 	"zues/config"
 	"zues/kube"
-	"fmt"
-	"strconv"
 	"zues/stest"
-	"io/ioutil"
-	"encoding/json"
-)
+	"zues/util"
 
+	"github.com/kataras/golog"
+	"github.com/kataras/iris"
+)
 
 func indexHandler(ctx iris.Context) {
 	configStr, err := ioutil.ReadFile("zues-config.yaml")
@@ -74,4 +74,23 @@ func getServices(ctx iris.Context) {
 		golog.Error(err)
 	}
 	util.BuildResponse(ctx, services)
+}
+
+func createPodHandler(ctx iris.Context) {
+	var requestData map[string]interface{}
+	ctx.ReadJSON(&requestData)
+	// Acccess the K8s API server to create a pod with the given spec
+	req, err := util.CreateHTTPRequest("POST", "http://localhost:8001/api/v1/namespaces/default/pods",
+		map[string]string{"Content-Type": "application/json"}, requestData)
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()})
+		return
+	}
+
+	_, resp, err := util.GetHTTPResponse(req)
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()})
+	}
+
+	util.BuildResponse(ctx, resp)
 }

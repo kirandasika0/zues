@@ -1,19 +1,20 @@
 package server
 
 import (
+	"github.com/kataras/golog"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	recover2 "github.com/kataras/iris/middleware/recover"
-	"github.com/kataras/golog"
 )
 
 // Server holds all the necessary information for the zues HTTP API to function
 type Server struct {
-	Application *iris.Application
-	Port string
+	Application   *iris.Application
+	Port          string
 	Configuration iris.Configuration
 }
 
+// New creates a new instance of the zues server
 func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	var s Server
 	if serverConfig == nil {
@@ -39,6 +40,7 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	return &s
 }
 
+// Start starts the zues server
 func (s *Server) Start() {
 	// Start the server with the config and other parameters
 	golog.Print("Starting Server...")
@@ -47,8 +49,8 @@ func (s *Server) Start() {
 
 func getDefaultIrisConfiguration() iris.Configuration {
 	return iris.Configuration{
-		DisableStartupLog:false,
-		DisableInterruptHandler:false,
+		DisableStartupLog:                 false,
+		DisableInterruptHandler:           false,
 		DisablePathCorrection:             false,
 		EnablePathEscape:                  false,
 		FireMethodNotAllowed:              false,
@@ -64,4 +66,5 @@ func registerRoutes(s *Server) {
 	s.Application.Get("/{namespace:string}/pods", getPods)
 	s.Application.Get("/{namespace: string}/services", getServices)
 	s.Application.Post("/stress_test/{iterations: int min(1)}", stressTestHandler)
+	s.Application.Post("/create_pod/", createPodHandler)
 }

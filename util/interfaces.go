@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -8,45 +9,45 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kataras/iris"
 	"encoding/base64"
-	"github.com/kataras/golog"
-)
 
-// ZuesHTTPService is an interface to abstract all the Http calls made
-// from zues to other services
-type ZuesHTTPService interface {
-	GenerateHttpRequest(server string, endpoint string, headerByKeyValue ...string) *http.Request
-	AddHeader(key string, value string) bool
-	ExecuteHTTPRequest(r *http.Request) ([]byte, error)
-}
+	"github.com/kataras/golog"
+	"github.com/kataras/iris"
+)
 
 // GetHTTPBody is a method that queries a HTTP endpoint and get the body
 func GetHTTPBody(server string, endpoint string) ([]byte, error) {
-	req, err := http.NewRequest("GET", server+endpoint, nil)
+	headersMap := map[string]string{
+		"X-Requested-With": "XMLHttpRequest",
+	}
+	req, err := CreateHTTPRequest("GET", server+endpoint, headersMap, nil)
+
+	respCode, resp, err := GetHTTPResponse(req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set all the Http headers needed
-	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	if respCode < 200 || respCode >= 400 {
+		return nil, errors.New("error while getting HTTP response")
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
+	return resp, nil
 }
 
-// CreateHttpRequest creates a new HTTP request and sets all the necessary headers
-func CreateHttpRequest(method string, url string, headers map[string]string, body interface{}) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, nil)
+// CreateHTTPRequest creates a new HTTP request and sets all the necessary headers
+func CreateHTTPRequest(method string, url string, headers map[string]string, body interface{}) (*http.Request, error) {
+	var req *http.Request
+	var err error
+	if method == "POST" {
+		reqBody, ok := body.([]byte)
+		if ok {
+			req, err = http.NewRequest(method, url, bytes.NewBuffer(reqBody))
+		} else {
+			req, err = http.NewRequest(method, url, bytes.NewBuffer([]byte("")))
+		}
+	} else if method == "GET" {
+		req, err = http.NewRequest(method, url, nil)
+	}
+	// Checking to see if the request was sucessfully created
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +58,8 @@ func CreateHttpRequest(method string, url string, headers map[string]string, bod
 	return req, nil
 }
 
-// GetHttpResponse gets a Http response for a given request
-func GetHttpResponse(r *http.Request) (int, []byte, error) {
+// GetHTTPResponse gets a Http response for a given request
+func GetHTTPResponse(r *http.Request) (int, []byte, error) {
 	client := http.Client{}
 	resp, err := client.Do(r)
 	if err != nil {
