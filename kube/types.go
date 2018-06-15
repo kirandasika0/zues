@@ -1,15 +1,15 @@
 package kube
 
-// KubeAPIServer is the main K8s REST API server endpoint
+// APIServer is the main K8s REST API server endpoint
 const APIServer = "http://localhost:8001"
 
 // K8sSession describe all the parameters need to keep a valid connection
 // to the Kubernetes server
 type K8sSession struct {
-	ServerAddress string `json:"server_address"'`
-	ServerPort uint16 `json:"server_port"`
+	ServerAddress string `json:"server_address"`
+	ServerPort    uint16 `json:"server_port"`
 	ServerBaseURL string `json:"server_base_url"`
-	AccessToken string `json:"access_token"`
+	AccessToken   string `json:"access_token"`
 }
 
 // Pod struct represents a K8s pod

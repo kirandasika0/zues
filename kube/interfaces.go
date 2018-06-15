@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/tidwall/gjson"
-	"os"
 	"fmt"
+	"os"
+
+	"github.com/tidwall/gjson"
 )
 
-
+// New creates a K8s session and returns a pointer to it
 func New() *K8sSession {
 	var session K8sSession
 	// Check environment variables to see if we have to run in-cluster
@@ -29,12 +30,12 @@ func New() *K8sSession {
 	return &session
 }
 
+// CreateNewPodWithNamespace create a pod by calling the K8s API.
 func (s *K8sSession) CreateNewPodWithNamespace(namespace string, podName string) Pod {
 	// TODO send a post request to K8s api to create a pod
 
 	return Pod{}
 }
-
 
 // GetPodsFromJSON gets pod info from json string
 func GetPodsFromJSON(jsonStr []byte) ([]Pod, error) {
@@ -51,7 +52,6 @@ func GetPodsFromJSON(jsonStr []byte) ([]Pod, error) {
 
 	return pods, nil
 }
-
 
 // GetServicesFromAPIServer gets all the services from the K8s API Server and parses them to a kube.Services struct
 func GetServicesFromAPIServer(jsonStr []byte) (*Services, error) {
