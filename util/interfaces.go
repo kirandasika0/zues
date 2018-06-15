@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"time"
 
@@ -162,4 +163,15 @@ func stringWithCharset(length int, charset string) string {
 // RandomString return a string of fixed length
 func RandomString(length int) string {
 	return stringWithCharset(length, charset)
+}
+
+// HasTCPConnection is a helper function to see if a server
+// is listening on a TCP port
+func HasTCPConnection(server string, port string) bool {
+	serverAddr := server + port
+	_, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		return false
+	}
+	return true
 }

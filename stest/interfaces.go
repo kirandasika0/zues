@@ -1,6 +1,7 @@
 package stest
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -16,10 +17,6 @@ var buffer []string
 // SetupStressTestEnvironment sets up the stress test environment. Sets up go routines
 // and other locks to ensure no race conditions
 func SetupStressTestEnvironment(server string, endpoint string, iterations int) []string {
-
-	if len(server) == 0 {
-		golog.Error("need a server to ping")
-	}
 
 	if len(buffer) > 0 {
 		buffer = []string{}
@@ -71,4 +68,28 @@ func computeStatistics(bodyDataCh <-chan []byte) {
 		buffer = append(buffer, string(bodyBuffer))
 		completeCount++
 	}
+}
+
+// InitateStressTestEnvironment does some required checks and sets up
+// a stress testing environment
+func (s *StressTest) InitateStressTestEnvironment() error {
+	// SERVICE DISCOVERY
+	// first estabilish a TCP connection and check
+	// if the server is running
+
+	// TODO change from localhost to acutal service name in future
+	if !util.HasTCPConnection("localhost", fmt.Sprintf(":%d", s.Spec.ServerPort)) {
+		return errors.New("Unable to contact host server")
+	}
+
+	// Queue up all the requests in order (Priority Queue)
+	// Start the timer
+	// Chunk the go routines into chunks of 25
+	// Using a channel to signal after every 25 requests chan struct{}
+	// Nested go routines
+	// Level 1 is for number of tests
+	// Level 2 is for number of requests per test (ie running 25 requests per cycle)
+	// Dump buffer is it exceeds the MaxResponseBuffer and reset executionTrace
+	// if needed to save memory
+	return nil
 }

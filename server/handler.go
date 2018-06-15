@@ -1,15 +1,14 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"zues/config"
 	"zues/kube"
 	"zues/stest"
 	"zues/util"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
 )
@@ -46,21 +45,52 @@ func getPods(ctx iris.Context) {
 }
 
 func stressTestHandler(ctx iris.Context) {
-	iterations, err := strconv.Atoi(ctx.Params().Get("iterations"))
-	if err != nil {
-		golog.Error(err)
-	}
-	var requestBody util.ZuesRequestBody
-	ctx.ReadJSON(&requestBody)
-	buffer := stest.SetupStressTestEnvironment(requestBody.Data, "/", iterations)
+	// iterations, err := strconv.Atoi(ctx.Params().Get("iterations"))
+	// if err != nil {
+	// 	golog.Error(err)
+	// }
+	// var requestBody util.ZuesRequestBody
+	// ctx.ReadJSON(&requestBody)
+	// buffer := stest.SetupStressTestEnvironment(requestBody.Data, "/", iterations)
 
-	var largeBuffer []interface{}
-	for _, b := range buffer {
-		var item interface{}
-		json.Unmarshal([]byte(b), &item)
-		largeBuffer = append(largeBuffer, item)
+	// var largeBuffer []interface{}
+	// for _, b := range buffer {
+	// 	var item interface{}
+	// 	json.Unmarshal([]byte(b), &item)
+	// 	largeBuffer = append(largeBuffer, item)
+	// }
+	// util.BuildResponse(ctx, largeBuffer, false)
+
+	// Procedure to set up stress tests
+	// 1. Read the POST body for the incoming request
+	// 2. Convert from YAML to JSON
+	// 3. Unmarshal to the StressTest struct and use it
+
+	body, err := util.ExtractHTTPBody(ctx.Request())
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		return
 	}
-	util.BuildResponse(ctx, largeBuffer, false)
+
+	var st stest.StressTest
+
+	// Convert from JSON to YAML
+	err = yaml.Unmarshal(body, &st)
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		return
+	}
+
+	// Set up the stress test environment
+
+	err = st.InitateStressTestEnvironment()
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		return
+	}
+
+	util.BuildResponse(ctx, st, false)
+
 }
 
 func getServices(ctx iris.Context) {
