@@ -77,10 +77,15 @@ func getServices(ctx iris.Context) {
 }
 
 func createPodHandler(ctx iris.Context) {
-	var requestData map[string]interface{}
-	ctx.ReadJSON(&requestData)
+	requestData, err := ioutil.ReadAll(ctx.Request().Body)
+	if err != nil {
+		golog.Error(err)
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, false)
+		return
+	}
+
 	// Acccess the K8s API server to create a pod with the given spec
-	req, err := util.CreateHTTPRequest("POST", "http://localhost:8001/api/v1/namespaces/default/pods",
+	req, err := util.CreateHTTPRequest("POST", "http://localhost:8001/api/v1/namespaces/sprintt-qa/pods",
 		map[string]string{"Content-Type": "application/json"}, requestData)
 	if err != nil {
 		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
@@ -92,5 +97,12 @@ func createPodHandler(ctx iris.Context) {
 		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 	}
 
-	util.BuildResponse(ctx, resp, false)
+	var tempData interface{}
+	json.Unmarshal(resp, &tempData)
+
+	util.BuildResponse(ctx, tempData, false)
+}
+
+func serverInfoHandler(ctx iris.Context) {
+	util.BuildResponse(ctx, ZuesServer.K8sSession, false)
 }

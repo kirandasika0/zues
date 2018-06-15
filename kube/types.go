@@ -3,6 +3,10 @@ package kube
 // APIServer is the main K8s REST API server endpoint
 const APIServer = "http://localhost:8001"
 
+var (
+	K8sGlobalSession *K8sSession
+)
+
 // K8sSession describe all the parameters need to keep a valid connection
 // to the Kubernetes server
 type K8sSession struct {

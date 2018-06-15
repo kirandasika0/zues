@@ -1,11 +1,13 @@
 package main
 
-import "zues/server"
+import (
+	"zues/kube"
+	"zues/server"
+)
 
 func main() {
-	zuesServer := server.New(nil, "")
-
-	// Start the server
-	zuesServer.Start()
+	server.ZuesServer = server.New(nil, "")
+	kube.K8sGlobalSession = kube.New()
+	server.ZuesServer.SetKubeSession(kube.K8sGlobalSession)
+	server.ZuesServer.Start()
 }
-

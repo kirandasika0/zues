@@ -30,6 +30,20 @@ func New() *K8sSession {
 	return &session
 }
 
+// Execute runs the current K8s session in a background thread
+func (s *K8sSession) Execute() error {
+	// TODO : run a test ping to the API server
+
+	return nil
+}
+
+// Kill destroys the current K8s session that is running in the background
+func (s *K8sSession) Kill() error {
+	// TODO : add more functionality
+
+	return nil
+}
+
 // CreateNewPodWithNamespace create a pod by calling the K8s API.
 func (s *K8sSession) CreateNewPodWithNamespace(namespace string, podName string) Pod {
 	// TODO send a post request to K8s api to create a pod

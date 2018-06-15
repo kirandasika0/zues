@@ -34,16 +34,11 @@ func GetHTTPBody(server string, endpoint string) ([]byte, error) {
 }
 
 // CreateHTTPRequest creates a new HTTP request and sets all the necessary headers
-func CreateHTTPRequest(method string, url string, headers map[string]string, body interface{}) (*http.Request, error) {
+func CreateHTTPRequest(method string, url string, headers map[string]string, body []byte) (*http.Request, error) {
 	var req *http.Request
 	var err error
 	if method == "POST" {
-		reqBody, ok := body.([]byte)
-		if ok {
-			req, err = http.NewRequest(method, url, bytes.NewBuffer(reqBody))
-		} else {
-			req, err = http.NewRequest(method, url, bytes.NewBuffer([]byte("")))
-		}
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 	} else if method == "GET" {
 		req, err = http.NewRequest(method, url, nil)
 	}
