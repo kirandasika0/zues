@@ -24,7 +24,7 @@ func indexHandler(ctx iris.Context) {
 		golog.Error(err)
 	}
 
-	util.BuildResponse(ctx, zuesBaseConfig)
+	util.BuildResponse(ctx, zuesBaseConfig, false)
 }
 
 func getPods(ctx iris.Context) {
@@ -39,9 +39,9 @@ func getPods(ctx iris.Context) {
 		golog.Error(err)
 	}
 	if len(pods) == 0 {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()})
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 	} else {
-		util.BuildResponse(ctx, pods)
+		util.BuildResponse(ctx, pods, false)
 	}
 }
 
@@ -60,7 +60,7 @@ func stressTestHandler(ctx iris.Context) {
 		json.Unmarshal([]byte(b), &item)
 		largeBuffer = append(largeBuffer, item)
 	}
-	util.BuildResponse(ctx, largeBuffer)
+	util.BuildResponse(ctx, largeBuffer, false)
 }
 
 func getServices(ctx iris.Context) {
@@ -73,7 +73,7 @@ func getServices(ctx iris.Context) {
 	if err != nil {
 		golog.Error(err)
 	}
-	util.BuildResponse(ctx, services)
+	util.BuildResponse(ctx, services, false)
 }
 
 func createPodHandler(ctx iris.Context) {
@@ -83,14 +83,14 @@ func createPodHandler(ctx iris.Context) {
 	req, err := util.CreateHTTPRequest("POST", "http://localhost:8001/api/v1/namespaces/default/pods",
 		map[string]string{"Content-Type": "application/json"}, requestData)
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()})
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 		return
 	}
 
 	_, resp, err := util.GetHTTPResponse(req)
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()})
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 	}
 
-	util.BuildResponse(ctx, resp)
+	util.BuildResponse(ctx, resp, false)
 }
