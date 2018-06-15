@@ -41,6 +41,8 @@ func CreateHTTPRequest(method string, url string, headers map[string]string, bod
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 	} else if method == "GET" {
 		req, err = http.NewRequest(method, url, nil)
+	} else if method == "DELETE" {
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 	}
 	// Checking to see if the request was sucessfully created
 	if err != nil {
@@ -69,6 +71,15 @@ func GetHTTPResponse(r *http.Request) (int, []byte, error) {
 
 	return resp.StatusCode, data, nil
 
+}
+
+// ExtractHTTPBody helper function to extract the HTTP body
+func ExtractHTTPBody(r *http.Request) ([]byte, error) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 func setRequestHeaders(r *http.Request, headers map[string]string) {

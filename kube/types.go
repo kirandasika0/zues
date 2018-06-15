@@ -4,16 +4,20 @@ package kube
 const APIServer = "http://localhost:8001"
 
 var (
+	// K8sGlobalSession global K8s session throughout
+	// the life cycle of the application.
 	K8sGlobalSession *K8sSession
 )
 
 // K8sSession describe all the parameters need to keep a valid connection
 // to the Kubernetes server
 type K8sSession struct {
-	ServerAddress string `json:"server_address"`
-	ServerPort    uint16 `json:"server_port"`
-	ServerBaseURL string `json:"server_base_url"`
-	AccessToken   string `json:"access_token"`
+	ServerAddress  string            `json:"server_address"`
+	ServerPort     uint16            `json:"server_port"`
+	ServerBaseURL  string            `json:"server_base_url"`
+	AccessToken    string            `json:"access_token"`
+	APICalls       uint64            `json:"apiCalls"`
+	DefaultHeaders map[string]string `json:"defaultHeaders"`
 }
 
 // Pod struct represents a K8s pod
@@ -23,6 +27,7 @@ type Pod struct {
 		GenerateName string `json:"generateName"`
 		Namespace    string `json:"namespace"`
 		SelfLink     string `json:"selfLink"`
+		UID          string `json:"uid"`
 	} `json:"metadata"`
 }
 

@@ -3,6 +3,7 @@ package kube
 import (
 	"encoding/json"
 	"errors"
+	"zues/util"
 
 	"fmt"
 	"os"
@@ -22,9 +23,14 @@ func New() *K8sSession {
 	} else {
 		// Run normal configuration
 		// Uses localhost k8s proxy
+		// Make sure it is running on port 8001
+		// COMMAND: kubectl proxy --port=8001
 		session.ServerAddress = "localhost"
 		session.ServerPort = 8001
-		session.ServerBaseURL = fmt.Sprintf("%s:%d", session.ServerAddress, session.ServerPort)
+		session.ServerBaseURL = fmt.Sprintf("http://%s:%d", session.ServerAddress, session.ServerPort)
+		session.DefaultHeaders = map[string]string{
+			"Content-Type": "application/json",
+		}
 	}
 
 	return &session
@@ -51,8 +57,8 @@ func (s *K8sSession) CreateNewPodWithNamespace(namespace string, podName string)
 	return Pod{}
 }
 
-// GetPodsFromJSON gets pod info from json string
-func GetPodsFromJSON(jsonStr []byte) ([]Pod, error) {
+// GetPodsFromAPIServer gets pod info from json string
+func (s *K8sSession) GetPodsFromAPIServer(jsonStr []byte) ([]Pod, error) {
 	if len(jsonStr) < 1 {
 		return nil, errors.New("please provide json string to decode")
 	}
@@ -68,7 +74,7 @@ func GetPodsFromJSON(jsonStr []byte) ([]Pod, error) {
 }
 
 // GetServicesFromAPIServer gets all the services from the K8s API Server and parses them to a kube.Services struct
-func GetServicesFromAPIServer(jsonStr []byte) (*Services, error) {
+func (s *K8sSession) GetServicesFromAPIServer(jsonStr []byte) (*Services, error) {
 	if len(jsonStr) < 1 {
 		return nil, errors.New("please provide a string to decode")
 	}
@@ -86,4 +92,75 @@ func GetServicesFromAPIServer(jsonStr []byte) (*Services, error) {
 	}
 
 	return &services, nil
+}
+
+// CreatePodWithNamespace creates a pod on a cluster in the given namespace
+func (s *K8sSession) CreatePodWithNamespace(podData []byte, namespace string) (Pod, error) {
+	// Steps to create a pod on a cluster
+	// 1. Create a unique name for the pod
+	// 2. Check if the namespace is specified in the request
+	// 3. Default to the namespace specified in the zues setup config
+	// 4. Save metadata returned from the K8s API in a base64 style
+
+	// Acccess the K8s API server to create a pod with the given spec
+	req, err := util.CreateHTTPRequest("POST",
+		s.ServerBaseURL+"/api/v1/namespaces/sprintt-qa/pods",
+		s.DefaultHeaders, podData)
+
+	// Define our new pod
+	var newPod Pod
+	if err != nil {
+		return newPod, err
+	}
+
+	_, resp, err := util.GetHTTPResponse(req)
+	if err != nil {
+		return newPod, err
+	}
+
+	// Unmarshal the JSON returned by the K8s API
+	json.Unmarshal(resp, &newPod)
+
+	return newPod, nil
+}
+
+// DeletePodWithNamespace deletes a certain pod from the cluster in a given namespace
+func (s *K8sSession) DeletePodWithNamespace(podName string, namespace string, uidIn string) (Pod, error) {
+	// This is a temporary pod deleteion spec
+	type preconditionsT struct {
+		uid string
+	}
+	type tempDeletePodSpec struct {
+		apiVersion         string
+		gracePeriodSeconds int
+		kind               string
+		preconditions      preconditionsT
+	}
+
+	var pod = tempDeletePodSpec{
+		apiVersion:         "v1",
+		gracePeriodSeconds: 10,
+		kind:               "Pod",
+		preconditions: preconditionsT{
+			uid: uidIn,
+		},
+	}
+	deleteData, err := json.Marshal(pod)
+	if err != nil {
+		return Pod{}, err
+	}
+	req, err := util.CreateHTTPRequest("DELETE",
+		s.ServerBaseURL+"/api/v1/namespaces/"+namespace+"/pods/"+podName,
+		s.DefaultHeaders, deleteData)
+	var deletedPod Pod
+	if err != nil {
+		return deletedPod, err
+	}
+	_, resp, err := util.GetHTTPResponse(req)
+	if err != nil {
+		return deletedPod, err
+	}
+
+	json.Unmarshal(resp, &deletedPod)
+	return deletedPod, nil
 }

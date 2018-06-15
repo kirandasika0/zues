@@ -34,7 +34,7 @@ func getPods(ctx iris.Context) {
 		golog.Error(err)
 	}
 
-	pods, err := kube.GetPodsFromJSON(body)
+	pods, err := ZuesServer.K8sSession.GetPodsFromAPIServer(body)
 	if err != nil {
 		golog.Error(err)
 	}
@@ -69,7 +69,7 @@ func getServices(ctx iris.Context) {
 	if err != nil {
 		golog.Error(err)
 	}
-	services, err := kube.GetServicesFromAPIServer(body)
+	services, err := ZuesServer.K8sSession.GetServicesFromAPIServer(body)
 	if err != nil {
 		golog.Error(err)
 	}
@@ -77,34 +77,40 @@ func getServices(ctx iris.Context) {
 }
 
 func createPodHandler(ctx iris.Context) {
-	// Steps to create a pod on a cluster
-	// 1. Create a unique name for the pod
-	// 2. Check if the namespace is specified in the request
-	// 3. Default to the namespace specified in the zues setup config
-	// 4. Save metadata returned from the K8s API in a base64 style
-	requestData, err := ioutil.ReadAll(ctx.Request().Body)
+	requestData, err := util.ExtractHTTPBody(ctx.Request())
 	if err != nil {
 		golog.Error(err)
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, false)
-		return
-	}
-
-	// Acccess the K8s API server to create a pod with the given spec
-	req, err := util.CreateHTTPRequest("POST", "http://localhost:8001/api/v1/namespaces/sprintt-qa/pods",
-		map[string]string{"Content-Type": "application/json"}, requestData)
-	if err != nil {
 		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
 		return
 	}
 
-	_, resp, err := util.GetHTTPResponse(req)
+	pod, err := ZuesServer.K8sSession.CreatePodWithNamespace(requestData, "sprintt-qa")
+
 	if err != nil {
 		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		return
 	}
-
-	util.BuildResponse(ctx, util.EncodeBase64(resp), false)
+	util.BuildResponse(ctx, pod, false)
 }
 
 func serverInfoHandler(ctx iris.Context) {
-	util.BuildResponse(ctx, ZuesServer.K8sSession, false)
+	util.BuildResponse(ctx, ZuesServer, false)
+}
+
+func deletePodHandler(ctx iris.Context) {
+	podName := ctx.Params().Get("podName")
+	namespace := ctx.Params().Get("namespace")
+	uid := ctx.Params().Get("uid")
+	if len(podName) < 1 || len(namespace) < 1 {
+		util.BuildResponse(ctx, map[string]string{"error": "need a pod name to delete."}, true)
+		return
+	}
+
+	pod, err := ZuesServer.K8sSession.DeletePodWithNamespace(podName, namespace, uid)
+	if err != nil {
+		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		return
+	}
+
+	util.BuildResponse(ctx, pod, false)
 }

@@ -17,10 +17,10 @@ var (
 
 // Server holds all the necessary information for the zues HTTP API to function
 type Server struct {
-	Application   *iris.Application
-	Port          string
-	Configuration iris.Configuration
-	K8sSession    *kube.K8sSession
+	Application   *iris.Application  `json:"-"`
+	Port          string             `json:"port"`
+	Configuration iris.Configuration `json:"-"`
+	K8sSession    *kube.K8sSession   `json:"k8sSession"`
 }
 
 // New creates a new instance of the zues server
@@ -86,4 +86,5 @@ func registerRoutes(s *Server) {
 	s.Application.Post("/stress_test/{iterations: int min(1)}", stressTestHandler)
 	s.Application.Post("/create_pod/", createPodHandler)
 	s.Application.Get("/info", serverInfoHandler)
+	s.Application.Delete("/pod/{namespace: string}/{podName :string}/{uid: string}", deletePodHandler)
 }
