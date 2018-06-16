@@ -15,6 +15,7 @@ const (
 	HTTPGetRequest    HTTPRequestType = "GET"
 	HTTPPostRequest   HTTPRequestType = "POST"
 	HTTPDeleteRequest HTTPRequestType = "DELETE"
+	HTTPPutRequest    HTTPRequestType = "PUT"
 
 	MaxResponseBuffer uint32 = 1000000
 	MaxRoutineChunk   int8   = 25

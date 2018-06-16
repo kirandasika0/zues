@@ -79,7 +79,7 @@ func (s *StressTest) InitateStressTestEnvironment() error {
 
 	// TODO change from localhost to acutal service name in future
 	if !util.HasTCPConnection("localhost", fmt.Sprintf(":%d", s.Spec.ServerPort)) {
-		return errors.New("Unable to contact host server")
+		return errors.New("Unable to contact host server. Tried to establish a TCP connection")
 	}
 
 	// Queue up all the requests in order (Priority Queue)

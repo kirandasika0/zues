@@ -45,22 +45,6 @@ func getPods(ctx iris.Context) {
 }
 
 func stressTestHandler(ctx iris.Context) {
-	// iterations, err := strconv.Atoi(ctx.Params().Get("iterations"))
-	// if err != nil {
-	// 	golog.Error(err)
-	// }
-	// var requestBody util.ZuesRequestBody
-	// ctx.ReadJSON(&requestBody)
-	// buffer := stest.SetupStressTestEnvironment(requestBody.Data, "/", iterations)
-
-	// var largeBuffer []interface{}
-	// for _, b := range buffer {
-	// 	var item interface{}
-	// 	json.Unmarshal([]byte(b), &item)
-	// 	largeBuffer = append(largeBuffer, item)
-	// }
-	// util.BuildResponse(ctx, largeBuffer, false)
-
 	// Procedure to set up stress tests
 	// 1. Read the POST body for the incoming request
 	// 2. Convert from YAML to JSON
