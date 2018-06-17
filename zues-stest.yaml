@@ -8,7 +8,7 @@ spec:
   numConcurrent: 10
   restDuration: 300 # restDuration will always be mentioned in ms
   serverType: "http"
-  serverPort: 8079
+  serverPort: 8284
   tests:
     - id: 1
       name: "my test 1"
@@ -28,6 +28,11 @@ spec:
       # the body must always be encoding in base64
       # Linux command echo '<your-text>' | base64
       body: "CmFwaVZlcnNpb246IHYxYWxwaGExCmtpbmQ6IFN0cmVzc1Rlc3QKbm90aWZ5OiB0cnVlCnNwZWM6CiAgc2VsZWN0b3I6CiAgICBuYW1lOiBnby1oZWxsby13b3JsZAogIG51bVJlcXVlc3RzOiAxMDAwCiAgbnVtQ29uY3VycmVudDogMTAKICByZXN0RHVyYXRpb246IDMwMCAjIHJlc3REdXJhdGlvbiB3aWxsIGFsd2F5cyBiZSBtZW50aW9uZWQgaW4gbXMKICBzZXJ2ZXJUeXBlOiBodHRwCiAgc2VydmVyUG9ydDogODA3OQogIHRlc3RzOgogICAgLSBpZDogMQogICAgICBuYW1lOiBteSB0ZXN0IDEKICAgICAgdHlwZTogR0VUCiAgICAgIGVuZHBvaW50OiAvCiAgICAgIHZhbGlkUmVzcG9uc2VDb2RlczoKICAgICAgICAtIDIwMAogICAgICAgIC0gMjAxCgogICAgLSBpZDogMgogICAgICBuYW1lOiBteSB0ZXN0IDIKICAgICAgdHlwZTogUE9TVAogICAgICBlbmRwb2ludDogL3Bvc3QKICAgICAgdmFsaWRSZXNwb25zZUNvZGVzOgogICAgICAgIC0gMjAwCiAgICAgICAgLSAyMDEKICAgICAgIyB0aGUgYm9keSBtdXN0IGFsd2F5cyBiZSBlbmNvZGluZyBpbiBiYXNlNjQKICAgICAgIyBMaW51eCBjb21tYW5kIGVjaG8gJzx5b3VyLXRleHQ+JyB8IGJhc2U2NAogICAgICBib2R5OiBkR2hwY3lCcGN5QmhJR3h2Ym1jZ2MzUnlhVzVuSUdsdUlHSmhjMlUyTkFvPQogIGV4ZWN1dGlvbk9yZGVyOgogICAgLSAxCiAgICAtIDIKCg=="
+      headers:
+        Content-Type: "application/json"
+        X-Requested-With: "XMLHttpRequest"
+      auth:
+        Bearer: "dGhpcyBpcyBhIHRva2VuCg=="
   executionOrder:
     - 1
     - 2

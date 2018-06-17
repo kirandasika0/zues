@@ -50,7 +50,7 @@ type test struct {
 	// Linux command echo '<your-text>' | base64
 	Body               []byte            `json:"body,omitempty"`
 	ValidResponseCodes []int16           `json:"validResponseCodes"`
-	Authorization      map[string]string `json:"authorization,omitempty"`
+	Authorization      map[string]string `json:"auth"`
 	Headers            map[string]string `json:"headers,omitempty"`
 }
 
