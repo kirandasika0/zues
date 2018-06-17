@@ -52,6 +52,11 @@
 			"Rev": "67f4ff8560dfa2b00920118f228c0a2f68760631"
 		},
 		{
+			"ImportPath": "github.com/ghodss/yaml",
+			"Comment": "v1.0.0-2-ge9ed3c6",
+			"Rev": "e9ed3c6dfb39bb1a32197cb10d527906fe4da4b6"
+		},
+		{
 			"ImportPath": "github.com/go-yaml/yaml",
 			"Comment": "v2.2.1",
 			"Rev": "5420a8b6744d3b0345ab293f6fcba19c978f1183"
