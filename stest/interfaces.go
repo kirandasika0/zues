@@ -92,7 +92,7 @@ func (s *StressTest) ExecuteEnvironment() {
 	// Dump buffer is it exceeds the MaxResponseBuffer and reset executionTrace
 	// if needed to save memory
 	startTime := time.Now().UnixNano()
-	fmt.Printf("Started test: %s at: %d\n", s.ID, startTime)
+	fmt.Printf("Start stress test %s at %d\n", s.ID, startTime)
 
 	// Calculate number of chunks
 	nChunks := int(int(s.Spec.NumRequests) / MaxRoutineChunk)
@@ -108,12 +108,11 @@ func (s *StressTest) ExecuteEnvironment() {
 
 		// Waiting on the computeTelemetryData go finish
 		s.localTelemetry.wg.Wait()
-		close(chunkCompleteCh)
 		time.Sleep(time.Duration(s.Spec.RestDuration) * time.Millisecond)
 	}
 
 	endTime := time.Now().UnixNano()
-	fmt.Printf("Elapsed time for test %s is %d ns\n", s.ID, ((endTime - startTime) / 1000000))
+	fmt.Printf("Elapsed time for test %s is %d ms\n", s.ID, ((endTime - startTime) / 1000000))
 }
 
 func (s *StressTest) findTest(targetTestID int16) (*test, error) {
@@ -144,7 +143,11 @@ func (s *StressTest) computeTelemetryData(chunkChan <-chan struct{}) {
 
 	}
 	for _, item := range items {
-		fmt.Printf("Computing: %s\n", item)
+		_, ok := item.(*test)
+		if !ok {
+			panic("type convertion failed")
+		}
+		//fmt.Printf("Completing: %d\n", test.ID)
 	}
 
 	s.localTelemetry.wg.Done()
@@ -171,11 +174,14 @@ func (s *StressTest) startRoutines(chunkChan chan<- struct{}) {
 	s.localTelemetry.routineWg.Wait()
 	// Signal after the responses have arrived is done
 	chunkChan <- struct{}{}
+	close(chunkChan)
 }
 
 // Pass the request in as a parameter and update the queue in the startRoutines
 func (s *StressTest) runTest(incomingReq *test) {
-	fmt.Printf("Running: %d\n", incomingReq.ID)
+	//fmt.Printf("Running: %d\n", incomingReq.ID)
+	// Update queue
+	s.localTelemetry.executionQueue.Put(incomingReq)
 	s.localTelemetry.routineWg.Done()
 }
 
