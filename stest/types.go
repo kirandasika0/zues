@@ -1,5 +1,11 @@
 package stest
 
+import (
+	"sync"
+
+	"github.com/Workiva/go-datastructures/queue"
+)
+
 // ServerType is a abstract type for a server
 // Defining all the types of servers.
 // Currently only support for HTTP1.1 servers
@@ -18,23 +24,24 @@ const (
 	HTTPPutRequest    HTTPRequestType = "PUT"
 
 	MaxResponseBuffer uint32 = 1000000
-	MaxRoutineChunk   int8   = 25
+	MaxRoutineChunk   int    = 25
 )
 
 // StressTest struct defines the parameters need for the stress test
 type StressTest struct {
-	APIVersion string         `json:"apiVersion"`
-	Kind       string         `json:"kind"`
-	Spec       stressTestSpec `json:"spec"`
-	Notify     bool           `json:"notify"`
-	localTrace executionTrace
+	ID             string         `json:"id,omitempty"`
+	APIVersion     string         `json:"apiVersion"`
+	Kind           string         `json:"kind"`
+	Spec           stressTestSpec `json:"spec"`
+	Notify         bool           `json:"notify"`
+	localTelemetry executionTelemetry
 }
 
 type stressTestSpec struct {
 	Selector       map[string]string `json:"selector"`
 	NumRequests    int16             `json:"numRequests"`
 	NumConcurrent  int16             `json:"numConcurrent"`
-	RestDuration   int32             `json:"restDuration"`
+	RestDuration   int               `json:"restDuration"`
 	ServerType     ServerType        `json:"serverType"`
 	ServerPort     int16             `json:"serverPort"`
 	Tests          []test            `json:"tests"`
@@ -48,11 +55,15 @@ type test struct {
 	Endpoint string          `json:"endpoint"`
 	//the Body must always be encoding in base64
 	// Linux command echo '<your-text>' | base64
-	Body               []byte            `json:"body,omitempty"`
-	ValidResponseCodes []int16           `json:"validResponseCodes"`
-	Authorization      map[string]string `json:"auth"`
-	Headers            map[string]string `json:"headers,omitempty"`
+	Body               string  `json:"body,omitempty"`
+	ValidResponseCodes []int16 `json:"validResponseCodes"`
+	// Authorization value should also be provided in base64 encoding
+	Authorization map[string]string `json:"auth"`
+	Headers       map[string]string `json:"headers,omitempty"`
 }
 
-type executionTrace struct {
+type executionTelemetry struct {
+	wg          sync.WaitGroup
+	scheduler   *queue.Queue
+	ElapsedTime int `json:"elapsed_time"`
 }

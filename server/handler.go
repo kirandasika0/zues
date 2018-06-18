@@ -8,7 +8,6 @@ import (
 	"zues/stest"
 	"zues/util"
 
-	yaml "github.com/ghodss/yaml"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
 )
@@ -23,7 +22,7 @@ func indexHandler(ctx iris.Context) {
 		golog.Error(err)
 	}
 
-	util.BuildResponse(ctx, zuesBaseConfig, false)
+	util.BuildResponse(ctx, zuesBaseConfig)
 }
 
 func getPods(ctx iris.Context) {
@@ -38,9 +37,9 @@ func getPods(ctx iris.Context) {
 		golog.Error(err)
 	}
 	if len(pods) == 0 {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		util.BuildErrorResponse(ctx, err.Error())
 	} else {
-		util.BuildResponse(ctx, pods, false)
+		util.BuildResponse(ctx, pods)
 	}
 }
 
@@ -52,29 +51,25 @@ func stressTestHandler(ctx iris.Context) {
 
 	body, err := util.ExtractHTTPBody(ctx.Request())
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		util.BuildErrorResponse(ctx, err.Error())
 		return
 	}
 
-	var st stest.StressTest
-
-	// Convert from JSON to YAML
-	err = yaml.Unmarshal(body, &st)
+	// Create an instance of the stress test environment
+	stressTest, err := stest.New(body)
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
-		return
+		util.BuildErrorResponse(ctx, err.Error())
 	}
 
-	// Set up the stress test environment
-
-	err = st.InitateStressTestEnvironment()
+	// Initiate the environment
+	err = stressTest.InitStressTestEnvironment()
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
-		return
+		util.BuildErrorResponse(ctx, err.Error())
 	}
+	// Execute the environment
+	stressTest.ExecuteEnvironment()
 
-	util.BuildResponse(ctx, st, false)
-
+	util.BuildResponse(ctx, stressTest)
 }
 
 func getServices(ctx iris.Context) {
@@ -87,28 +82,28 @@ func getServices(ctx iris.Context) {
 	if err != nil {
 		golog.Error(err)
 	}
-	util.BuildResponse(ctx, services, false)
+	util.BuildResponse(ctx, services)
 }
 
 func createPodHandler(ctx iris.Context) {
 	requestData, err := util.ExtractHTTPBody(ctx.Request())
 	if err != nil {
 		golog.Error(err)
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		util.BuildErrorResponse(ctx, err.Error())
 		return
 	}
 
 	pod, err := ZuesServer.K8sSession.CreatePodWithNamespace(requestData, "sprintt-qa")
 
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		util.BuildErrorResponse(ctx, err.Error())
 		return
 	}
-	util.BuildResponse(ctx, pod, false)
+	util.BuildResponse(ctx, pod)
 }
 
 func serverInfoHandler(ctx iris.Context) {
-	util.BuildResponse(ctx, ZuesServer, false)
+	util.BuildResponse(ctx, ZuesServer)
 }
 
 func deletePodHandler(ctx iris.Context) {
@@ -116,15 +111,15 @@ func deletePodHandler(ctx iris.Context) {
 	namespace := ctx.Params().Get("namespace")
 	uid := ctx.Params().Get("uid")
 	if len(podName) < 1 || len(namespace) < 1 {
-		util.BuildResponse(ctx, map[string]string{"error": "need a pod name to delete."}, true)
+		util.BuildErrorResponse(ctx, "need a pod name to delete.")
 		return
 	}
 
 	pod, err := ZuesServer.K8sSession.DeletePodWithNamespace(podName, namespace, uid)
 	if err != nil {
-		util.BuildResponse(ctx, map[string]string{"error": err.Error()}, true)
+		util.BuildErrorResponse(ctx, err.Error())
 		return
 	}
 
-	util.BuildResponse(ctx, pod, false)
+	util.BuildResponse(ctx, pod)
 }

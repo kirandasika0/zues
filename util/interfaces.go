@@ -118,7 +118,7 @@ func SetResponseHeaders(w http.ResponseWriter, headersMap map[string]string) err
 }
 
 // BuildResponse builds a iris HttpResponse
-func BuildResponse(ctx iris.Context, responseData interface{}, isError bool) error {
+func BuildResponse(ctx iris.Context, responseData interface{}) error {
 	if ctx == nil {
 		return errors.New("need a iris context")
 	}
@@ -126,13 +126,21 @@ func BuildResponse(ctx iris.Context, responseData interface{}, isError bool) err
 		map[string]string{
 			"X-Request-ID": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
 		})
-	if isError {
-		ctx.StatusCode(iris.StatusInternalServerError)
-	} else {
-		ctx.StatusCode(iris.StatusOK)
-	}
+	ctx.StatusCode(iris.StatusOK)
 	ctx.JSON(responseData)
 	return nil
+}
+
+// BuildErrorResponse builds a iris HttpResponse
+func BuildErrorResponse(ctx iris.Context, errorString string) {
+	SetResponseHeaders(ctx.ResponseWriter(),
+		map[string]string{
+			"X-Request-ID": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
+		})
+	ctx.StatusCode(iris.StatusInternalServerError)
+	ctx.JSON(map[string]string{
+		"error": errorString,
+	})
 }
 
 // Small Helper functions
