@@ -1,8 +1,7 @@
 build:
-	go build main.go
-
+	go build -o zues main.go
 run:
 	make build
-	./main
+	./zues
 clean:
-	rm main
+	rm zues
