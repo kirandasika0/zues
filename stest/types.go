@@ -1,6 +1,8 @@
 package stest
 
 import (
+	"net/http"
+	"net/http/httptrace"
 	"sync"
 
 	"github.com/Workiva/go-datastructures/queue"
@@ -63,7 +65,14 @@ type test struct {
 }
 
 type executionTelemetry struct {
-	wg          sync.WaitGroup
-	scheduler   *queue.Queue
-	ElapsedTime int `json:"elapsed_time"`
+	wg             sync.WaitGroup
+	routineWg      sync.WaitGroup
+	scheduler      *queue.Queue
+	executionQueue *queue.Queue
+	ElapsedTime    int `json:"elapsed_time"`
+}
+
+type stressTestRequest struct {
+	request *http.Request
+	trace   *httptrace.ClientTrace
 }

@@ -67,7 +67,7 @@ func stressTestHandler(ctx iris.Context) {
 		util.BuildErrorResponse(ctx, err.Error())
 	}
 	// Execute the environment
-	stressTest.ExecuteEnvironment()
+	go stressTest.ExecuteEnvironment()
 
 	util.BuildResponse(ctx, stressTest)
 }

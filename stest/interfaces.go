@@ -3,6 +3,8 @@ package stest
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptrace"
 	"sync"
 	"time"
 	"zues/util"
@@ -20,6 +22,7 @@ func New(config []byte) (*StressTest, error) {
 	}
 	// Create the new ID and return
 	newStressTest.ID = util.RandomString(16)
+
 	return &newStressTest, nil
 }
 
@@ -28,6 +31,8 @@ func New(config []byte) (*StressTest, error) {
 func (s *StressTest) InitStressTestEnvironment() error {
 
 	s.localTelemetry.wg = sync.WaitGroup{}
+	s.localTelemetry.routineWg = sync.WaitGroup{}
+	s.localTelemetry.executionQueue = queue.New(int64(MaxRoutineChunk))
 
 	// SERVICE DISCOVERY
 	// First estabilish a TCP connection and check to see if service is running
@@ -89,26 +94,26 @@ func (s *StressTest) ExecuteEnvironment() {
 	startTime := time.Now().UnixNano()
 	fmt.Printf("Started test: %s at: %d\n", s.ID, startTime)
 
-	// Creating a buffered channel to wait for 25 requests to finish
-	chunkCompleteCh := make(chan struct{})
-	s.localTelemetry.wg.Add(1)
-	// This go routine is only triggered after MaxRoutuneChunk times
-	go s.computeTelemetryData(chunkCompleteCh)
+	// Calculate number of chunks
+	nChunks := int(int(s.Spec.NumRequests) / MaxRoutineChunk)
+	for i := 0; i < nChunks; i++ {
+		fmt.Printf("CHUNK: %d\n", i)
+		// Creating a buffered channel to wait for 25 requests to finish
+		chunkCompleteCh := make(chan struct{})
+		s.localTelemetry.wg.Add(1)
+		// This go routine is only triggered after MaxRoutuneChunk times
+		go s.computeTelemetryData(chunkCompleteCh)
 
-	// Create routines to send HTTP requests
-	// for i := 0; i < 26; i++ {
-	// 	s.localTelemetry.wg.Add(1)
-	// 	go s.runTest(chunkCompleteCh)
-	// }
-	s.startRoutines(chunkCompleteCh)
+		s.startRoutines(chunkCompleteCh)
+
+		// Waiting on the computeTelemetryData go finish
+		s.localTelemetry.wg.Wait()
+		close(chunkCompleteCh)
+		time.Sleep(time.Duration(s.Spec.RestDuration) * time.Millisecond)
+	}
+
 	endTime := time.Now().UnixNano()
-	fmt.Printf("Elapsed time for test %s is %d ns", s.ID, (endTime - startTime))
-
-	// Waiting on the computeTelemetryData go finish
-	s.localTelemetry.wg.Wait()
-
-	time.Sleep(time.Duration(s.Spec.RestDuration) * time.Millisecond)
-	close(chunkCompleteCh)
+	fmt.Printf("Elapsed time for test %s is %d ns\n", s.ID, ((endTime - startTime) / 1000000))
 }
 
 func (s *StressTest) findTest(targetTestID int16) (*test, error) {
@@ -129,8 +134,17 @@ func (s *StressTest) findTest(targetTestID int16) (*test, error) {
 func (s *StressTest) computeTelemetryData(chunkChan <-chan struct{}) {
 	// This function only runs after the buffer on the channel is full to
 	// compute statistics of the data
-	for range chunkChan {
-		fmt.Println("computing...")
+
+	//Waiting on a signal to process
+	<-chunkChan
+	qLen := s.localTelemetry.executionQueue.Len()
+
+	items, err := s.localTelemetry.executionQueue.Get(qLen)
+	if err != nil {
+
+	}
+	for _, item := range items {
+		fmt.Printf("Computing: %s\n", item)
 	}
 
 	s.localTelemetry.wg.Done()
@@ -138,15 +152,43 @@ func (s *StressTest) computeTelemetryData(chunkChan <-chan struct{}) {
 
 func (s *StressTest) startRoutines(chunkChan chan<- struct{}) {
 	for i := 0; i < MaxRoutineChunk; i++ {
-		s.localTelemetry.wg.Add(1)
-		go s.runTest()
+		s.localTelemetry.routineWg.Add(1)
+		items, err := s.localTelemetry.scheduler.Get(1)
+		if err != nil {
+			panic("dont know what to do")
+		}
+		var runnableTest *test
+		var ok bool
+		for _, item := range items {
+			runnableTest, ok = item.(*test)
+		}
+		if !ok {
+			panic("don't know what to do")
+		}
+		go s.runTest(runnableTest)
+		s.localTelemetry.scheduler.Put(runnableTest)
 	}
-	s.localTelemetry.wg.Wait()
-	// Signal after the time is done
+	s.localTelemetry.routineWg.Wait()
+	// Signal after the responses have arrived is done
 	chunkChan <- struct{}{}
 }
 
-func (s *StressTest) runTest() {
-	fmt.Println("running...")
-	s.localTelemetry.wg.Done()
+// Pass the request in as a parameter and update the queue in the startRoutines
+func (s *StressTest) runTest(incomingReq *test) {
+	fmt.Printf("Running: %d\n", incomingReq.ID)
+	s.localTelemetry.routineWg.Done()
+}
+
+func buildRequest(method HTTPRequestType, port int16, server, endpoint string) *http.Request {
+	url := fmt.Sprintf("%s:%d%s", server, port, endpoint)
+	req, _ := http.NewRequest(string(method), url, nil)
+	trace := &httptrace.ClientTrace{
+		GotConn: func(connInfo httptrace.GotConnInfo) {
+			fmt.Printf("Got Conn: %+v\n", connInfo)
+		},
+		DNSDone: func(dnsInfo httptrace.DNSDoneInfo) {
+			fmt.Printf("DNS Info: %+v\n", dnsInfo)
+		},
+	}
+	return req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 }
