@@ -7,6 +7,7 @@ import (
 	"time"
 	"zues/util"
 
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/kataras/golog"
 )
 
@@ -91,5 +92,15 @@ func (s *StressTest) InitateStressTestEnvironment() error {
 	// Level 2 is for number of requests per test (ie running 25 requests per cycle)
 	// Dump buffer is it exceeds the MaxResponseBuffer and reset executionTrace
 	// if needed to save memory
+	scheduler := queue.New(int64(len(s.Spec.Tests)))
+	// Queueing up all the jobs needed
+	for _, test := range s.Spec.Tests {
+		scheduler.Put(test)
+	}
+	firstItem, err := scheduler.Peek()
+	if err != nil {
+		panic("problem")
+	}
+	fmt.Printf("%v\n", firstItem)
 	return nil
 }
