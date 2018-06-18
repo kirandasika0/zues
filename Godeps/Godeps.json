@@ -14,6 +14,11 @@
 			"Rev": "8828253bfc54f2f91aaef5f32b44a244b0a98e4f"
 		},
 		{
+			"ImportPath": "github.com/Workiva/go-datastructures/queue",
+			"Comment": "v1.0.48",
+			"Rev": "f338bf48899950e415caffa02222a7273fbdeaf6"
+		},
+		{
 			"ImportPath": "github.com/aymerick/raymond",
 			"Comment": "v2.0.2-5-gb565731",
 			"Rev": "b565731e1464263de0bda75f2e45d97b54b60110"
