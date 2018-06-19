@@ -59,12 +59,14 @@ func stressTestHandler(ctx iris.Context) {
 	stressTest, err := stest.New(body)
 	if err != nil {
 		util.BuildErrorResponse(ctx, err.Error())
+		return
 	}
 
 	// Initiate the environment
 	err = stressTest.InitStressTestEnvironment()
 	if err != nil {
 		util.BuildErrorResponse(ctx, err.Error())
+		return
 	}
 	// Execute the environment
 	go stressTest.ExecuteEnvironment()

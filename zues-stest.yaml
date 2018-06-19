@@ -3,17 +3,17 @@ kind: StressTest
 notify: true
 spec:
   selector:
-    name: go-hello-world
-  numRequests: 1000
+    name: httpbin.org
+  numRequests: 100
   numConcurrent: 10
-  restDuration: 300 # restDuration will always be mentioned in ms
+  restDuration: 1500 # restDuration will always be mentioned in ms
   serverType: "http"
-  serverPort: 8284
+  serverPort: 80
   tests:
     - id: 1
       name: "my test 1"
       type: "GET"
-      endpoint: "/"
+      endpoint: "/delay/5?foo=bar&bar=baz"
       validResponseCodes:
         - 200
         - 201
@@ -27,7 +27,7 @@ spec:
         - 201
       # the body must always be encoding in base64
       # Linux command echo '<your-text>' | base64
-      body: "CmFwaVZlcnNpb246IHYxYWxwaGExCmtpbmQ6IFN0cmVzc1Rlc3QKbm90aWZ5OiB0cnVlCnNwZWM6CiAgc2VsZWN0b3I6CiAgICBuYW1lOiBnby1oZWxsby13b3JsZAogIG51bVJlcXVlc3RzOiAxMDAwCiAgbnVtQ29uY3VycmVudDogMTAKICByZXN0RHVyYXRpb246IDMwMCAjIHJlc3REdXJhdGlvbiB3aWxsIGFsd2F5cyBiZSBtZW50aW9uZWQgaW4gbXMKICBzZXJ2ZXJUeXBlOiBodHRwCiAgc2VydmVyUG9ydDogODA3OQogIHRlc3RzOgogICAgLSBpZDogMQogICAgICBuYW1lOiBteSB0ZXN0IDEKICAgICAgdHlwZTogR0VUCiAgICAgIGVuZHBvaW50OiAvCiAgICAgIHZhbGlkUmVzcG9uc2VDb2RlczoKICAgICAgICAtIDIwMAogICAgICAgIC0gMjAxCgogICAgLSBpZDogMgogICAgICBuYW1lOiBteSB0ZXN0IDIKICAgICAgdHlwZTogUE9TVAogICAgICBlbmRwb2ludDogL3Bvc3QKICAgICAgdmFsaWRSZXNwb25zZUNvZGVzOgogICAgICAgIC0gMjAwCiAgICAgICAgLSAyMDEKICAgICAgIyB0aGUgYm9keSBtdXN0IGFsd2F5cyBiZSBlbmNvZGluZyBpbiBiYXNlNjQKICAgICAgIyBMaW51eCBjb21tYW5kIGVjaG8gJzx5b3VyLXRleHQ+JyB8IGJhc2U2NAogICAgICBib2R5OiBkR2hwY3lCcGN5QmhJR3h2Ym1jZ2MzUnlhVzVuSUdsdUlHSmhjMlUyTkFvPQogIGV4ZWN1dGlvbk9yZGVyOgogICAgLSAxCiAgICAtIDIKCg=="
+      body: "e2ZvbzogdGhpcyBpcyBhIHN0cmluZyBpbnNpZGUganNvbn0K"
       headers:
         Content-Type: "application/json"
         X-Requested-With: "XMLHttpRequest"

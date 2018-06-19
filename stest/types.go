@@ -16,6 +16,8 @@ type ServerType string
 // HTTPRequestType signifies the various requests present
 type HTTPRequestType string
 
+type TestStatus string
+
 const (
 	// HTTP is the default HTTP 1.1 server
 	HTTP ServerType = "http"
@@ -25,9 +27,17 @@ const (
 	HTTPDeleteRequest HTTPRequestType = "DELETE"
 	HTTPPutRequest    HTTPRequestType = "PUT"
 
+	TestStatusCreated  TestStatus = "Created"
+	TestStatusRunning  TestStatus = "Running"
+	TestStatusComplted TestStatus = "Completed"
+
 	MaxResponseBuffer uint32 = 1000000
 	MaxRoutineChunk   int    = 25
 )
+
+// InMemoryTests is a map of all tests in memory. Tests are normally removed
+// a certain time if they are not used or accessed
+var InMemoryTests = map[string]interface{}{}
 
 // StressTest struct defines the parameters need for the stress test
 type StressTest struct {
@@ -41,7 +51,7 @@ type StressTest struct {
 
 type stressTestSpec struct {
 	Selector       map[string]string `json:"selector"`
-	NumRequests    int16             `json:"numRequests"`
+	NumRequests    uint16            `json:"numRequests"`
 	NumConcurrent  int16             `json:"numConcurrent"`
 	RestDuration   int               `json:"restDuration"`
 	ServerType     ServerType        `json:"serverType"`
@@ -57,7 +67,7 @@ type test struct {
 	Endpoint string          `json:"endpoint"`
 	//the Body must always be encoding in base64
 	// Linux command echo '<your-text>' | base64
-	Body               string  `json:"body,omitempty"`
+	Body               []byte  `json:"body,omitempty"`
 	ValidResponseCodes []int16 `json:"validResponseCodes"`
 	// Authorization value should also be provided in base64 encoding
 	Authorization map[string]string `json:"auth"`
@@ -69,7 +79,9 @@ type executionTelemetry struct {
 	routineWg      sync.WaitGroup
 	scheduler      *queue.Queue
 	executionQueue *queue.Queue
-	ElapsedTime    int `json:"elapsed_time"`
+	ElapsedTime    int        `json:"elapsed_time"`
+	Status         TestStatus `json:"status"`
+	ResponseBuffer []string   `json:"response_buffer,omitempty"`
 }
 
 type stressTestRequest struct {

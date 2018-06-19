@@ -1,13 +1,15 @@
 package stest
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptrace"
 	"sync"
 	"time"
 	"zues/util"
+
+	"github.com/kataras/golog"
 
 	"github.com/Workiva/go-datastructures/queue"
 	yaml "github.com/ghodss/yaml"
@@ -23,6 +25,14 @@ func New(config []byte) (*StressTest, error) {
 	// Create the new ID and return
 	newStressTest.ID = util.RandomString(16)
 
+	// Pre-process all data into the right format
+	for _, test := range newStressTest.Spec.Tests {
+
+		// All Authorization values are provided in base64 encoding
+		for k, v := range test.Authorization {
+			test.Authorization[k] = string(util.DecodeBase64(v))
+		}
+	}
 	return &newStressTest, nil
 }
 
@@ -42,28 +52,13 @@ func (s *StressTest) InitStressTestEnvironment() error {
 		* Use the selector name from the pod as the service name default
 		unless specified
 	*/
-	if !util.HasTCPConnection("localhost", fmt.Sprintf(":%d", s.Spec.ServerPort)) {
-		return errors.New("Unable to contact host server. Tried to establish a TCP connection")
-	}
+	// if !util.HasTCPConnection("localhost", fmt.Sprintf(":%d", s.Spec.ServerPort)) {
+	// 	return errors.New("Unable to contact host server. Tried to establish a TCP connection")
+	// }
 
 	// Queue up all the requests in order
 	// Scheduler used throughout the testing phase
 	scheduler := queue.New(int64(len(s.Spec.Tests)))
-
-	// Pre-process all data into the right format
-
-	for _, test := range s.Spec.Tests {
-
-		// All Authorization values are provided in base64 encoding
-		for k, v := range test.Authorization {
-			test.Authorization[k] = string(util.DecodeBase64(v))
-		}
-
-		if test.Type == HTTPPostRequest {
-			// Decode everything from base64
-			test.Body = string(util.DecodeBase64(test.Body))
-		}
-	}
 
 	for _, testID := range s.Spec.ExecutionOrder {
 		testToQueue, err := s.findTest(testID)
@@ -97,7 +92,7 @@ func (s *StressTest) ExecuteEnvironment() {
 	// Calculate number of chunks
 	nChunks := int(int(s.Spec.NumRequests) / MaxRoutineChunk)
 	for i := 0; i < nChunks; i++ {
-		fmt.Printf("CHUNK: %d\n", i)
+		fmt.Printf("TEST: %s CHUNK: %d\n", s.ID, i+1)
 		// Creating a buffered channel to wait for 25 requests to finish
 		chunkCompleteCh := make(chan struct{})
 		s.localTelemetry.wg.Add(1)
@@ -110,7 +105,6 @@ func (s *StressTest) ExecuteEnvironment() {
 		s.localTelemetry.wg.Wait()
 		time.Sleep(time.Duration(s.Spec.RestDuration) * time.Millisecond)
 	}
-
 	endTime := time.Now().UnixNano()
 	fmt.Printf("Elapsed time for test %s is %d ms\n", s.ID, ((endTime - startTime) / 1000000))
 }
@@ -147,7 +141,6 @@ func (s *StressTest) computeTelemetryData(chunkChan <-chan struct{}) {
 		if !ok {
 			panic("type convertion failed")
 		}
-		//fmt.Printf("Completing: %d\n", test.ID)
 	}
 
 	s.localTelemetry.wg.Done()
@@ -182,19 +175,33 @@ func (s *StressTest) runTest(incomingReq *test) {
 	//fmt.Printf("Running: %d\n", incomingReq.ID)
 	// Update queue
 	s.localTelemetry.executionQueue.Put(incomingReq)
+	// Create a HTTP request
+	req := buildRequest(incomingReq.Type, s.Spec.ServerPort,
+		s.Spec.Selector["name"], incomingReq.Endpoint,
+		incomingReq.Body, incomingReq.Headers)
+	_, _, err := util.GetHTTPResponse(req)
+	if err != nil {
+		golog.Errorf("Error while getting response: %s", err.Error())
+	}
 	s.localTelemetry.routineWg.Done()
 }
 
-func buildRequest(method HTTPRequestType, port int16, server, endpoint string) *http.Request {
-	url := fmt.Sprintf("%s:%d%s", server, port, endpoint)
-	req, _ := http.NewRequest(string(method), url, nil)
-	trace := &httptrace.ClientTrace{
-		GotConn: func(connInfo httptrace.GotConnInfo) {
-			fmt.Printf("Got Conn: %+v\n", connInfo)
-		},
-		DNSDone: func(dnsInfo httptrace.DNSDoneInfo) {
-			fmt.Printf("DNS Info: %+v\n", dnsInfo)
-		},
+func buildRequest(method HTTPRequestType, port int16, server, endpoint string, body []byte, headers map[string]string) *http.Request {
+	url := fmt.Sprintf("http://%s:%d%s", server, port, endpoint)
+	var req *http.Request
+	var err error
+	if method == HTTPGetRequest {
+		req, err = util.CreateHTTPRequest(string(method), url, headers, nil)
+	} else if method == HTTPPostRequest {
+		var decodedBody []byte
+		base64.StdEncoding.Decode(decodedBody, body)
+		if err != nil {
+			golog.Errorf("Error while decoding base64 object. %s [%s %s]", err, method, url)
+		}
+		req, err = util.CreateHTTPRequest(string(method), url, headers, decodedBody)
 	}
-	return req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+	if err != nil {
+		golog.Errorf("Error in create a %s HTTP request for URL: %s", method, url)
+	}
+	return req
 }
