@@ -186,19 +186,18 @@ func (s *StressTest) runTest(incomingReq *test) {
 	s.localTelemetry.routineWg.Done()
 }
 
-func buildRequest(method HTTPRequestType, port int16, server, endpoint string, body []byte, headers map[string]string) *http.Request {
+func buildRequest(method HTTPRequestType, port int16, server, endpoint string, body string, headers map[string]string) *http.Request {
 	url := fmt.Sprintf("http://%s:%d%s", server, port, endpoint)
 	var req *http.Request
 	var err error
 	if method == HTTPGetRequest {
 		req, err = util.CreateHTTPRequest(string(method), url, headers, nil)
 	} else if method == HTTPPostRequest {
-		var decodedBody []byte
-		base64.StdEncoding.Decode(decodedBody, body)
+		payloadData, err := base64.StdEncoding.DecodeString(string(body))
 		if err != nil {
-			golog.Errorf("Error while decoding base64 object. %s [%s %s]", err, method, url)
+			panic(err)
 		}
-		req, err = util.CreateHTTPRequest(string(method), url, headers, decodedBody)
+		req, err = util.CreateHTTPRequest(string(method), url, headers, payloadData)
 	}
 	if err != nil {
 		golog.Errorf("Error in create a %s HTTP request for URL: %s", method, url)

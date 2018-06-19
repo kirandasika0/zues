@@ -67,7 +67,7 @@ type test struct {
 	Endpoint string          `json:"endpoint"`
 	//the Body must always be encoding in base64
 	// Linux command echo '<your-text>' | base64
-	Body               []byte  `json:"body,omitempty"`
+	Body               string  `json:"body,omitempty"`
 	ValidResponseCodes []int16 `json:"validResponseCodes"`
 	// Authorization value should also be provided in base64 encoding
 	Authorization map[string]string `json:"auth"`

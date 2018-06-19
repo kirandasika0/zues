@@ -27,7 +27,7 @@ spec:
         - 201
       # the body must always be encoding in base64
       # Linux command echo '<your-text>' | base64
-      body: "e2ZvbzogdGhpcyBpcyBhIHN0cmluZyBpbnNpZGUganNvbn0K"
+      body: "eyJpZCI6MSwidW5pcXVlSWQiOjExLCJmaXJzdE5hbWUiOiJKYXdhaGFyIiwibGFzdE5hbWUiOiJTaXZhIiwidXNlck5hbWUiOiJzcHJpbnR0MDEiLCJlbWFpbCI6ImpzaXZhQGF2aWdvc29sdXRpb25zLmNvbSIsInBhc3N3b3JkIjoiYXBwMTAwIiwiZW5hYmxlZCI6dHJ1ZX0="
       headers:
         Content-Type: "application/json"
         X-Requested-With: "XMLHttpRequest"
