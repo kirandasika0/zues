@@ -16,6 +16,7 @@ type ServerType string
 // HTTPRequestType signifies the various requests present
 type HTTPRequestType string
 
+// TestStatus represents the on going status of a test
 type TestStatus string
 
 const (
@@ -27,9 +28,9 @@ const (
 	HTTPDeleteRequest HTTPRequestType = "DELETE"
 	HTTPPutRequest    HTTPRequestType = "PUT"
 
-	TestStatusCreated  TestStatus = "Created"
-	TestStatusRunning  TestStatus = "Running"
-	TestStatusComplted TestStatus = "Completed"
+	TestStatusCreated   TestStatus = "Created"
+	TestStatusRunning   TestStatus = "Running"
+	TestStatusCompleted TestStatus = "Completed"
 
 	MaxResponseBuffer uint32 = 1000000
 	MaxRoutineChunk   int    = 25
@@ -37,7 +38,7 @@ const (
 
 // InMemoryTests is a map of all tests in memory. Tests are normally removed
 // a certain time if they are not used or accessed
-var InMemoryTests = map[string]interface{}{}
+var InMemoryTests = map[string][]statisticalTelemetry{}
 
 // StressTest struct defines the parameters need for the stress test
 type StressTest struct {
@@ -77,6 +78,7 @@ type test struct {
 type executionTelemetry struct {
 	wg             sync.WaitGroup
 	routineWg      sync.WaitGroup
+	updateMutex    sync.RWMutex
 	scheduler      *queue.Queue
 	executionQueue *queue.Queue
 	ElapsedTime    int        `json:"elapsed_time"`
@@ -87,4 +89,16 @@ type executionTelemetry struct {
 type stressTestRequest struct {
 	request *http.Request
 	trace   *httptrace.ClientTrace
+}
+
+// Statistical Telemetry is the main data that will
+// queried from the RPC or REST calls that come to this server
+// all other data will be available based on availability
+type statisticalTelemetry struct {
+	TestID    int16      `json:"test_id"`
+	Completed int        `json:"completed"`
+	Remaining uint16     `json:"remaining"`
+	Success   int        `json:"success"`
+	Timestamp int64      `json:"timestamp"`
+	Status    TestStatus `json:"status"`
 }
