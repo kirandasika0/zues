@@ -177,7 +177,8 @@ func RandomString(length int) string {
 // is listening on a TCP port
 func HasTCPConnection(server string, port string) bool {
 	serverAddr := server + port
-	_, err := net.Dial("tcp", serverAddr)
+	// _, err := net.Dial("tcp", serverAddr)
+	_, err := net.DialTimeout("tcp", serverAddr, 10*time.Second)
 	if err != nil {
 		return false
 	}
