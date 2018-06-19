@@ -135,7 +135,7 @@ func BuildResponse(ctx iris.Context, responseData interface{}) error {
 func BuildErrorResponse(ctx iris.Context, errorString string) {
 	SetResponseHeaders(ctx.ResponseWriter(),
 		map[string]string{
-			"X-Request-ID": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
+			"X-Trace-Id": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
 		})
 	ctx.StatusCode(iris.StatusInternalServerError)
 	ctx.JSON(map[string]string{
