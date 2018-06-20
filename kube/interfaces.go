@@ -105,7 +105,7 @@ func (s *K8sSession) CreatePodWithNamespace(podData []byte, namespace string) (P
 
 	// Acccess the K8s API server to create a pod with the given spec
 	req, err := util.CreateHTTPRequest("POST",
-		s.ServerBaseURL+"/api/v1/namespaces/sprintt-qa/pods",
+		s.ServerBaseURL+"/api/v1/namespaces/"+namespace+"/pods",
 		s.DefaultHeaders, podData)
 
 	// Define our new pod
@@ -114,9 +114,11 @@ func (s *K8sSession) CreatePodWithNamespace(podData []byte, namespace string) (P
 		return newPod, err
 	}
 
-	_, resp, err := util.GetHTTPResponse(req)
+	statusCode, resp, err := util.GetHTTPResponse(req)
 	if err != nil {
 		return newPod, err
+	} else if !util.IsValidResponseCode(statusCode, 200, 201, 202) {
+		return newPod, fmt.Errorf("Invalid response recieved %d expected 200, 201, 202", statusCode)
 	}
 
 	// Unmarshal the JSON returned by the K8s API
