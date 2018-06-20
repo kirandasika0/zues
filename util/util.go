@@ -23,6 +23,16 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
+// HeadersMap default response headers
+var HeadersMap = map[string]string{
+	"Content-Type": "application/json",
+}
+
+// ZuesRequestBody represent the POST body in a Http request
+type ZuesRequestBody struct {
+	Data string `json:"data"`
+}
+
 // GetHTTPBody is a method that queries a HTTP endpoint and get the body
 func GetHTTPBody(server string, endpoint string) ([]byte, error) {
 	headersMap := map[string]string{
