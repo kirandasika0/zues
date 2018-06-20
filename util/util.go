@@ -194,3 +194,13 @@ func HasTCPConnection(server string, port string) bool {
 	}
 	return true
 }
+
+// IsValidResponseCode is a helper function to see if a give response code okay
+func IsValidResponseCode(responseCode int, validCodes ...int) bool {
+	for _, code := range validCodes {
+		if responseCode == code {
+			return true
+		}
+	}
+	return false
+}
