@@ -23,17 +23,26 @@ const (
 	// HTTP is the default HTTP 1.1 server
 	HTTP ServerType = "http"
 
-	HTTPGetRequest    HTTPRequestType = "GET"
-	HTTPPostRequest   HTTPRequestType = "POST"
+	// HTTPGetRequest is the HTTP verb for a GET request
+	HTTPGetRequest HTTPRequestType = "GET"
+	// HTTPPostRequest  is the HTTP verb for a POST request
+	HTTPPostRequest HTTPRequestType = "POST"
+	// HTTPDeleteRequest is the HTTP verb for a DELETE request
 	HTTPDeleteRequest HTTPRequestType = "DELETE"
-	HTTPPutRequest    HTTPRequestType = "PUT"
+	// HTTPPutRequest is the HTTP verb for a PUT request
+	HTTPPutRequest HTTPRequestType = "PUT"
 
-	TestStatusCreated   TestStatus = "Created"
-	TestStatusRunning   TestStatus = "Running"
+	// TestStatusCreated signifies the current status of a Test job running in the background
+	TestStatusCreated TestStatus = "Created"
+	// TestStatusRunning signifies the current status of a Test job running in the background
+	TestStatusRunning TestStatus = "Running"
+	// TestStatusCompleted signifies the current status of a Test job running in the background
 	TestStatusCompleted TestStatus = "Completed"
 
+	// MaxResponseBuffer is a constant that is used a threshold before dumping all the response data
 	MaxResponseBuffer uint32 = 1000000
-	MaxRoutineChunk   int    = 25
+	// MaxRoutineChunk is a constant that shows the number of concurrent workers per chunk
+	MaxRoutineChunk int = 25
 )
 
 // InMemoryTests is a map of all tests in memory. Tests are normally removed
