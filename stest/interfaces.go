@@ -39,6 +39,7 @@ func New(config []byte) (*StressTest, error) {
 		InMemoryTests[newStressTest.ID] = make([]statisticalTelemetry, len(newStressTest.Spec.Tests))
 	}
 	for i, st := range newStressTest.Spec.Tests {
+		startTime := time.Now().Unix()
 		InMemoryTests[newStressTest.ID][i] = statisticalTelemetry{
 			TestID:    st.ID,
 			Name:      st.Name,
@@ -47,7 +48,8 @@ func New(config []byte) (*StressTest, error) {
 			Total:     newStressTest.Spec.NumRequests,
 			Success:   0,
 			Status:    TestStatusCreated,
-			Timestamp: time.Now().Unix(),
+			UpdatedAt: startTime,
+			CreatedAt: startTime,
 		}
 	}
 	return &newStressTest, nil
@@ -178,8 +180,6 @@ func (s *StressTest) processWorkerResponse(statUpdateDoneChan chan<- struct{}, c
 }
 
 func (s *StressTest) startWorkers(chunkCompleteChan chan<- struct{}, successChan, errorChan chan<- int16) {
-	// This flag is used to set the status of the test the first time
-	updateFlag := false
 	for i := 0; i < MaxRoutineChunk; i++ {
 		qLen := s.localTelemetry.scheduler.Len()
 		items, err := s.localTelemetry.scheduler.Get(qLen)
@@ -191,10 +191,12 @@ func (s *StressTest) startWorkers(chunkCompleteChan chan<- struct{}, successChan
 			if !ok {
 				golog.Errorf("Error in type conversion.")
 			}
-			if !updateFlag {
-				// Updating status
+			// Update Test status
+			inMemTest := &InMemoryTests[s.ID][st.ID-1]
+			if inMemTest == nil {
+				golog.Errorf("Error while fetching test %s from cache.", s.ID)
+			} else if inMemTest.Status == TestStatusCreated {
 				InMemoryTests[s.ID][st.ID-1].Status = TestStatusRunning
-				updateFlag = true
 			}
 			s.localTelemetry.routineWg.Add(1)
 			go s.runTest(st, successChan, errorChan)
@@ -268,7 +270,7 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan in
 	for {
 		select {
 		case testID := <-successChan:
-			golog.Println(fmt.Sprintf("Success received for test %d", testID))
+			//golog.Println(fmt.Sprintf("Success received for test %d", testID))
 			s.localTelemetry.updateMutex.Lock()
 			// Lock no ensure no race condition
 			sTelemetry := &InMemoryTests[s.ID][testID-1]
@@ -277,11 +279,13 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan in
 			sTelemetry.Completed++
 			sTelemetry.Remaining--
 			// Update the timestamp to the latest timestamp
-			sTelemetry.Timestamp = time.Now().Unix()
+			sTelemetry.UpdatedAt = time.Now().Unix()
 
 			// Update the status to completed if all the requests are done
 			if sTelemetry.Completed == sTelemetry.Total {
 				sTelemetry.Status = TestStatusCompleted
+				// Calculate duration
+				sTelemetry.Elapsed = time.Now().Unix() - sTelemetry.CreatedAt
 			}
 			s.localTelemetry.updateMutex.Unlock()
 		case testID := <-errorChan:
