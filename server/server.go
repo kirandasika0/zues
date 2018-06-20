@@ -91,4 +91,5 @@ func registerRoutes(s *Server) {
 	s.Application.Get("/info", serverInfoHandler)
 	s.Application.Post("/test", stressTestHandler)
 	s.Application.Delete("/pod/{namespace: string}/{podName :string}/{uid: string}", deletePodHandler)
+	s.Application.Get("/test/status/{test_id: string}", stressTestStatusHandler)
 }

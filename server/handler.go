@@ -74,6 +74,17 @@ func stressTestHandler(ctx iris.Context) {
 	util.BuildResponse(ctx, stressTest)
 }
 
+func stressTestStatusHandler(ctx iris.Context) {
+	testID := ctx.Params().Get("test_id")
+	value, ok := stest.InMemoryTests[testID]
+	if !ok {
+		util.BuildErrorResponse(ctx, fmt.Sprintf("Error test with id %s not found", testID))
+		return
+	}
+
+	util.BuildResponse(ctx, value)
+}
+
 func getServices(ctx iris.Context) {
 	namespace := ctx.Params().Get("namespace")
 	body, err := util.GetHTTPBody(kube.APIServer, fmt.Sprintf("/api/v1/namespaces/%s/services", namespace))
