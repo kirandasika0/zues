@@ -110,6 +110,8 @@ type statisticalTelemetry struct {
 	Remaining uint16     `json:"remaining"`
 	Total     uint16     `json:"total"`
 	Success   int        `json:"success"`
-	Timestamp int64      `json:"timestamp"`
 	Status    TestStatus `json:"status"`
+	UpdatedAt int64      `json:"updated_at"`
+	CreatedAt int64      `json:"create_at"`
+	Elapsed   int64      `json:"elapsed"`
 }
