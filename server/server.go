@@ -84,12 +84,16 @@ func getDefaultIrisConfiguration() iris.Configuration {
 }
 
 func registerRoutes(s *Server) {
+	// Application level routes
 	s.Application.Get("/", indexHandler)
+	s.Application.Get("/info", serverInfoHandler)
+	// kube package routes
 	s.Application.Get("/{namespace:string}/pods", getPods)
 	s.Application.Get("/{namespace: string}/services", getServices)
-	s.Application.Post("/create_pod/", createPodHandler)
-	s.Application.Get("/info", serverInfoHandler)
-	s.Application.Post("/test", stressTestHandler)
+	s.Application.Post("/{namespace: string}/pod/", createPodHandler)
 	s.Application.Delete("/pod/{namespace: string}/{podName :string}/{uid: string}", deletePodHandler)
+
+	// Stress test package routes
+	s.Application.Post("/test", stressTestHandler)
 	s.Application.Get("/test/status/{test_id: string}", stressTestStatusHandler)
 }
