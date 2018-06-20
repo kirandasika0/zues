@@ -96,8 +96,10 @@ type stressTestRequest struct {
 // all other data will be available based on availability
 type statisticalTelemetry struct {
 	TestID    int16      `json:"test_id"`
-	Completed int        `json:"completed"`
+	Name      string     `json:"name"`
+	Completed uint16     `json:"completed"`
 	Remaining uint16     `json:"remaining"`
+	Total     uint16     `json:"total"`
 	Success   int        `json:"success"`
 	Timestamp int64      `json:"timestamp"`
 	Status    TestStatus `json:"status"`
