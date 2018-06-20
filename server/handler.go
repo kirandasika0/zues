@@ -106,7 +106,7 @@ func createPodHandler(ctx iris.Context) {
 		return
 	}
 
-	pod, err := ZuesServer.K8sSession.CreatePodWithNamespace(requestData, "sprintt-qa")
+	pod, err := ZuesServer.K8sSession.CreatePodWithNamespace(requestData, ctx.Params().Get("namespace"))
 
 	if err != nil {
 		util.BuildErrorResponse(ctx, err.Error())
