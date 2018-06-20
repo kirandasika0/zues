@@ -120,7 +120,7 @@ func (s *StressTest) ExecuteEnvironment() {
 		// This go routine is only triggered after MaxRoutuneChunk times
 		go s.processChunkResponse(chunkCompleteCh)
 
-		s.startRoutines(chunkCompleteCh)
+		s.startWorkers(chunkCompleteCh)
 
 		// Waiting on the computeTelemetryData go finish
 		s.localTelemetry.wg.Wait()
@@ -168,7 +168,7 @@ func (s *StressTest) processChunkResponse(chunkChan <-chan struct{}) {
 	s.localTelemetry.wg.Done()
 }
 
-func (s *StressTest) startRoutines(chunkChan chan<- struct{}) {
+func (s *StressTest) startWorkers(chunkChan chan<- struct{}) {
 	for i := 0; i < MaxRoutineChunk; i++ {
 		qLen := s.localTelemetry.scheduler.Len()
 		items, err := s.localTelemetry.scheduler.Get(qLen)
