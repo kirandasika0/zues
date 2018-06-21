@@ -1,38 +1,28 @@
 package main
 
 import (
-	"context"
 	"net"
+	"os"
 	"zues/kube"
+	pb "zues/proto"
+	"zues/rpc"
 	"zues/server"
 
 	"github.com/kataras/golog"
 	"google.golang.org/grpc"
 
-	pb "zues/proto"
-
 	"github.com/soheilhy/cmux"
 	"golang.org/x/sync/errgroup"
 )
 
-type rpcServer struct{}
-
-func (s *rpcServer) GetInfo(ctx context.Context, in *pb.Empty) (*pb.InfoResponse, error) {
-	return &pb.InfoResponse{
-		Port:     server.ZuesServer.Port,
-		ServerID: server.ZuesServer.ServerID,
-		K8SSession: &pb.K8SSession{
-			ServerAddress: server.ZuesServer.K8sSession.ServerAddress,
-			ServerPort:    uint32(server.ZuesServer.K8sSession.ServerPort),
-			ServerBaseUrl: server.ZuesServer.K8sSession.ServerBaseURL,
-			AccessToken:   server.ZuesServer.K8sSession.AccessToken,
-			ApiCalls:      server.ZuesServer.K8sSession.APICalls,
-		},
-	}, nil
-}
-
 func main() {
-	listener, err := net.Listen("tcp", "0.0.0.0:8284")
+	// Docker needs to use the 0.0.0.0 format to forward all requests
+	// to the server in the container
+	var networkString = "localhost:8284"
+	if os.Getenv("DOCKER_ENV") == "true" {
+		networkString = "0.0.0.0:8284"
+	}
+	listener, err := net.Listen("tcp", networkString)
 	if err != nil {
 		panic(err)
 	}
@@ -41,7 +31,7 @@ func main() {
 	httpListener := m.Match(cmux.HTTP1Fast())
 
 	g := new(errgroup.Group)
-	g.Go(func() error { return serveGRPCServer(grpcListener) })
+	g.Go(func() error { return servegRPCServer(grpcListener) })
 	g.Go(func() error { return serveHTTPServer(httpListener) })
 	g.Go(func() error { return m.Serve() })
 
@@ -57,9 +47,9 @@ func serveHTTPServer(l net.Listener) error {
 	return nil
 }
 
-func serveGRPCServer(l net.Listener) error {
+func servegRPCServer(l net.Listener) error {
 	golog.Println("Starting gRPC server...")
-	grpcServer := grpc.NewServer()
-	pb.RegisterZuesControlServer(grpcServer, &rpcServer{})
-	return grpcServer.Serve(l)
+	s := grpc.NewServer()
+	pb.RegisterZuesControlServer(s, &rpc.RPCServer{})
+	return s.Serve(l)
 }
