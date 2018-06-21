@@ -2,8 +2,8 @@ apiVersion: v1alpha1
 type: ConfigSpec
 spec:
   name: candidate-service
-  namespace: test
-  maxBuildErrors: 100
+  namespace: default
+  maxBuildErrors: 20
   maxRetries: 3
   gatherSatistics: true
   notify: true
