@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 FROM alpine
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
+ENV DOCKER_ENV=true
 WORKDIR /zues
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=build-env $GOPATH/src/zues/main .
