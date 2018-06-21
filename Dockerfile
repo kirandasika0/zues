@@ -18,5 +18,5 @@ ENV PATH=$GOPATH/bin:$PATH
 WORKDIR /zues
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=build-env $GOPATH/src/zues/main .
-EXPOSE 82840
+EXPOSE 8284
 ENTRYPOINT [ "./main" ]
