@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"net"
 	"zues/kube"
 	"zues/util"
 
@@ -54,10 +55,10 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 }
 
 // Start starts the zues server
-func (s *Server) Start() {
+func (s *Server) Start(l net.Listener) {
 	// Start the server with the config and other parameters
 	golog.Print("Starting Server...")
-	s.Application.Run(iris.Addr(s.Port), iris.WithConfiguration(s.Configuration))
+	s.Application.Run(iris.Listener(l))
 }
 
 // SetKubeSession binds the current K8s session to the server
