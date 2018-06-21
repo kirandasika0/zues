@@ -32,7 +32,7 @@ func (s *rpcServer) GetInfo(ctx context.Context, in *pb.Empty) (*pb.InfoResponse
 }
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:8284")
+	listener, err := net.Listen("tcp", "0.0.0.0:8284")
 	if err != nil {
 		panic(err)
 	}
