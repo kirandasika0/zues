@@ -2,6 +2,7 @@ syntax = "proto3";
 
 service ZuesControl {
     rpc GetInfo(Empty) returns (InfoResponse) {}
+    rpc DeployJob(JobRequest) returns (JobResponse) {}
 }
 
 message Empty {}
@@ -18,4 +19,17 @@ message K8sSession {
     string ServerBaseUrl = 3;
     string AccessToken = 4;
     uint64 ApiCalls = 5;
+}
+
+message JobRequest {
+    // This will always be transported in base64 to the server
+    // First step will always decode from base64
+    string JobDescInYaml = 1;
+    int64 Timestamp = 2;
+}
+
+message JobResponse {
+    string JobID = 1;
+    string Status = 2;
+    int64 CreatedAt = 3;
 }
