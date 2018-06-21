@@ -1,5 +1,8 @@
 package config
 
+// CurrentJobs hold all the in memory jobs
+var CurrentJobs = map[string]Config{}
+
 // Config defines a yaml configuration given by the developer
 type Config struct {
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
