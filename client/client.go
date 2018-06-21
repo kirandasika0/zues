@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
+	"sync"
 	"time"
 	pb "zues/proto"
 	"zues/util"
@@ -13,7 +13,17 @@ import (
 	"google.golang.org/grpc"
 )
 
+var wg = sync.WaitGroup{}
+
 func main() {
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go getResponse()
+	}
+	wg.Wait()
+}
+
+func getResponse() {
 	conn, err := grpc.Dial("localhost:8284", grpc.WithInsecure())
 	if err != nil {
 		golog.Error(err)
@@ -22,7 +32,7 @@ func main() {
 
 	c := pb.NewZuesControlClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	content, _ := ioutil.ReadFile("../zues-config.yaml")
 	encodedBytes := util.EncodeBase64(content)
@@ -31,5 +41,9 @@ func main() {
 	if err != nil {
 		golog.Error(err)
 	}
-	golog.Info(fmt.Sprintf("%+v", res))
+	jDetails, err := c.JobDetails(ctx, &pb.JobRequest{
+		JobID: res.JobID,
+	})
+	golog.Infof("%+v", jDetails)
+	wg.Done()
 }

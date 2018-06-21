@@ -33,7 +33,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_7e70e7c58bfcf72f, []int{0}
+	return fileDescriptor_server_7c8bbf4131488981, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -54,19 +54,19 @@ func (m *Empty) XXX_DiscardUnknown() {
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
 type InfoResponse struct {
-	Port                 string      `protobuf:"bytes,1,opt,name=Port,proto3" json:"Port,omitempty"`
-	ServerID             string      `protobuf:"bytes,2,opt,name=ServerID,proto3" json:"ServerID,omitempty"`
-	K8SSession           *K8SSession `protobuf:"bytes,4,opt,name=K8sSession,proto3" json:"K8sSession,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
-	XXX_unrecognized     []byte      `json:"-"`
-	XXX_sizecache        int32       `json:"-"`
+	Port                 string   `protobuf:"bytes,1,opt,name=Port,proto3" json:"Port,omitempty"`
+	ServerID             string   `protobuf:"bytes,2,opt,name=ServerID,proto3" json:"ServerID,omitempty"`
+	Health               string   `protobuf:"bytes,3,opt,name=health,proto3" json:"health,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *InfoResponse) Reset()         { *m = InfoResponse{} }
 func (m *InfoResponse) String() string { return proto.CompactTextString(m) }
 func (*InfoResponse) ProtoMessage()    {}
 func (*InfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_7e70e7c58bfcf72f, []int{1}
+	return fileDescriptor_server_7c8bbf4131488981, []int{1}
 }
 func (m *InfoResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_InfoResponse.Unmarshal(m, b)
@@ -100,81 +100,11 @@ func (m *InfoResponse) GetServerID() string {
 	return ""
 }
 
-func (m *InfoResponse) GetK8SSession() *K8SSession {
+func (m *InfoResponse) GetHealth() string {
 	if m != nil {
-		return m.K8SSession
-	}
-	return nil
-}
-
-type K8SSession struct {
-	ServerAddress        string   `protobuf:"bytes,1,opt,name=ServerAddress,proto3" json:"ServerAddress,omitempty"`
-	ServerPort           uint32   `protobuf:"varint,2,opt,name=ServerPort,proto3" json:"ServerPort,omitempty"`
-	ServerBaseUrl        string   `protobuf:"bytes,3,opt,name=ServerBaseUrl,proto3" json:"ServerBaseUrl,omitempty"`
-	AccessToken          string   `protobuf:"bytes,4,opt,name=AccessToken,proto3" json:"AccessToken,omitempty"`
-	ApiCalls             uint64   `protobuf:"varint,5,opt,name=ApiCalls,proto3" json:"ApiCalls,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *K8SSession) Reset()         { *m = K8SSession{} }
-func (m *K8SSession) String() string { return proto.CompactTextString(m) }
-func (*K8SSession) ProtoMessage()    {}
-func (*K8SSession) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_7e70e7c58bfcf72f, []int{2}
-}
-func (m *K8SSession) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_K8SSession.Unmarshal(m, b)
-}
-func (m *K8SSession) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_K8SSession.Marshal(b, m, deterministic)
-}
-func (dst *K8SSession) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_K8SSession.Merge(dst, src)
-}
-func (m *K8SSession) XXX_Size() int {
-	return xxx_messageInfo_K8SSession.Size(m)
-}
-func (m *K8SSession) XXX_DiscardUnknown() {
-	xxx_messageInfo_K8SSession.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_K8SSession proto.InternalMessageInfo
-
-func (m *K8SSession) GetServerAddress() string {
-	if m != nil {
-		return m.ServerAddress
+		return m.Health
 	}
 	return ""
-}
-
-func (m *K8SSession) GetServerPort() uint32 {
-	if m != nil {
-		return m.ServerPort
-	}
-	return 0
-}
-
-func (m *K8SSession) GetServerBaseUrl() string {
-	if m != nil {
-		return m.ServerBaseUrl
-	}
-	return ""
-}
-
-func (m *K8SSession) GetAccessToken() string {
-	if m != nil {
-		return m.AccessToken
-	}
-	return ""
-}
-
-func (m *K8SSession) GetApiCalls() uint64 {
-	if m != nil {
-		return m.ApiCalls
-	}
-	return 0
 }
 
 type JobRequest struct {
@@ -182,6 +112,7 @@ type JobRequest struct {
 	// First step will always decode from base64
 	JobDescInYaml        string   `protobuf:"bytes,1,opt,name=JobDescInYaml,proto3" json:"JobDescInYaml,omitempty"`
 	Timestamp            int64    `protobuf:"varint,2,opt,name=Timestamp,proto3" json:"Timestamp,omitempty"`
+	JobID                string   `protobuf:"bytes,3,opt,name=JobID,proto3" json:"JobID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -191,7 +122,7 @@ func (m *JobRequest) Reset()         { *m = JobRequest{} }
 func (m *JobRequest) String() string { return proto.CompactTextString(m) }
 func (*JobRequest) ProtoMessage()    {}
 func (*JobRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_7e70e7c58bfcf72f, []int{3}
+	return fileDescriptor_server_7c8bbf4131488981, []int{2}
 }
 func (m *JobRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JobRequest.Unmarshal(m, b)
@@ -225,6 +156,13 @@ func (m *JobRequest) GetTimestamp() int64 {
 	return 0
 }
 
+func (m *JobRequest) GetJobID() string {
+	if m != nil {
+		return m.JobID
+	}
+	return ""
+}
+
 type JobResponse struct {
 	JobID                string   `protobuf:"bytes,1,opt,name=JobID,proto3" json:"JobID,omitempty"`
 	Status               string   `protobuf:"bytes,2,opt,name=Status,proto3" json:"Status,omitempty"`
@@ -238,7 +176,7 @@ func (m *JobResponse) Reset()         { *m = JobResponse{} }
 func (m *JobResponse) String() string { return proto.CompactTextString(m) }
 func (*JobResponse) ProtoMessage()    {}
 func (*JobResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_7e70e7c58bfcf72f, []int{4}
+	return fileDescriptor_server_7c8bbf4131488981, []int{3}
 }
 func (m *JobResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JobResponse.Unmarshal(m, b)
@@ -279,12 +217,90 @@ func (m *JobResponse) GetCreatedAt() int64 {
 	return 0
 }
 
+type JobDetailResponse struct {
+	JobID                string   `protobuf:"bytes,1,opt,name=JobID,proto3" json:"JobID,omitempty"`
+	JobStatus            string   `protobuf:"bytes,2,opt,name=JobStatus,proto3" json:"JobStatus,omitempty"`
+	MaxBuildErrors       int32    `protobuf:"varint,3,opt,name=MaxBuildErrors,proto3" json:"MaxBuildErrors,omitempty"`
+	MaxRetries           int32    `protobuf:"varint,4,opt,name=MaxRetries,proto3" json:"MaxRetries,omitempty"`
+	ErrorsOccured        int32    `protobuf:"varint,5,opt,name=ErrorsOccured,proto3" json:"ErrorsOccured,omitempty"`
+	RetriesOccured       int32    `protobuf:"varint,6,opt,name=RetriesOccured,proto3" json:"RetriesOccured,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *JobDetailResponse) Reset()         { *m = JobDetailResponse{} }
+func (m *JobDetailResponse) String() string { return proto.CompactTextString(m) }
+func (*JobDetailResponse) ProtoMessage()    {}
+func (*JobDetailResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_7c8bbf4131488981, []int{4}
+}
+func (m *JobDetailResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_JobDetailResponse.Unmarshal(m, b)
+}
+func (m *JobDetailResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_JobDetailResponse.Marshal(b, m, deterministic)
+}
+func (dst *JobDetailResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_JobDetailResponse.Merge(dst, src)
+}
+func (m *JobDetailResponse) XXX_Size() int {
+	return xxx_messageInfo_JobDetailResponse.Size(m)
+}
+func (m *JobDetailResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_JobDetailResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_JobDetailResponse proto.InternalMessageInfo
+
+func (m *JobDetailResponse) GetJobID() string {
+	if m != nil {
+		return m.JobID
+	}
+	return ""
+}
+
+func (m *JobDetailResponse) GetJobStatus() string {
+	if m != nil {
+		return m.JobStatus
+	}
+	return ""
+}
+
+func (m *JobDetailResponse) GetMaxBuildErrors() int32 {
+	if m != nil {
+		return m.MaxBuildErrors
+	}
+	return 0
+}
+
+func (m *JobDetailResponse) GetMaxRetries() int32 {
+	if m != nil {
+		return m.MaxRetries
+	}
+	return 0
+}
+
+func (m *JobDetailResponse) GetErrorsOccured() int32 {
+	if m != nil {
+		return m.ErrorsOccured
+	}
+	return 0
+}
+
+func (m *JobDetailResponse) GetRetriesOccured() int32 {
+	if m != nil {
+		return m.RetriesOccured
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Empty)(nil), "Empty")
 	proto.RegisterType((*InfoResponse)(nil), "InfoResponse")
-	proto.RegisterType((*K8SSession)(nil), "K8sSession")
 	proto.RegisterType((*JobRequest)(nil), "JobRequest")
 	proto.RegisterType((*JobResponse)(nil), "JobResponse")
+	proto.RegisterType((*JobDetailResponse)(nil), "JobDetailResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -301,6 +317,7 @@ const _ = grpc.SupportPackageIsVersion4
 type ZuesControlClient interface {
 	GetInfo(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*InfoResponse, error)
 	DeployJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	JobDetails(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobDetailResponse, error)
 }
 
 type zuesControlClient struct {
@@ -329,10 +346,20 @@ func (c *zuesControlClient) DeployJob(ctx context.Context, in *JobRequest, opts 
 	return out, nil
 }
 
+func (c *zuesControlClient) JobDetails(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobDetailResponse, error) {
+	out := new(JobDetailResponse)
+	err := c.cc.Invoke(ctx, "/ZuesControl/JobDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ZuesControlServer is the server API for ZuesControl service.
 type ZuesControlServer interface {
 	GetInfo(context.Context, *Empty) (*InfoResponse, error)
 	DeployJob(context.Context, *JobRequest) (*JobResponse, error)
+	JobDetails(context.Context, *JobRequest) (*JobDetailResponse, error)
 }
 
 func RegisterZuesControlServer(s *grpc.Server, srv ZuesControlServer) {
@@ -375,6 +402,24 @@ func _ZuesControl_DeployJob_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ZuesControl_JobDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ZuesControlServer).JobDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ZuesControl/JobDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ZuesControlServer).JobDetails(ctx, req.(*JobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ZuesControl_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ZuesControl",
 	HandlerType: (*ZuesControlServer)(nil),
@@ -387,36 +432,41 @@ var _ZuesControl_serviceDesc = grpc.ServiceDesc{
 			MethodName: "DeployJob",
 			Handler:    _ZuesControl_DeployJob_Handler,
 		},
+		{
+			MethodName: "JobDetails",
+			Handler:    _ZuesControl_JobDetails_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "server.proto",
 }
 
-func init() { proto.RegisterFile("server.proto", fileDescriptor_server_7e70e7c58bfcf72f) }
+func init() { proto.RegisterFile("server.proto", fileDescriptor_server_7c8bbf4131488981) }
 
-var fileDescriptor_server_7e70e7c58bfcf72f = []byte{
-	// 355 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x92, 0x4f, 0x6f, 0x9b, 0x40,
-	0x10, 0xc5, 0x4d, 0xfd, 0xaf, 0x0c, 0xf6, 0x65, 0x55, 0x55, 0xc8, 0xaa, 0x2a, 0xb4, 0xea, 0x01,
-	0xa9, 0x12, 0x07, 0xf7, 0xd2, 0x2b, 0x31, 0x51, 0x04, 0xb9, 0x58, 0x6b, 0xe7, 0xe0, 0xe4, 0x04,
-	0xf6, 0x44, 0xb2, 0x0c, 0x2c, 0xd9, 0x59, 0x47, 0xf2, 0x17, 0xcb, 0xe7, 0x8b, 0x58, 0x88, 0xc1,
-	0x37, 0xde, 0x8f, 0xdd, 0x37, 0x6f, 0x66, 0x16, 0x66, 0x84, 0xea, 0x1d, 0x55, 0x50, 0x29, 0xa9,
-	0x25, 0x9f, 0xc2, 0xf8, 0xbe, 0xa8, 0xf4, 0x85, 0x9f, 0x60, 0x16, 0x97, 0xaf, 0x52, 0x20, 0x55,
-	0xb2, 0x24, 0x64, 0x0c, 0x46, 0x6b, 0xa9, 0xb4, 0x6b, 0x79, 0x96, 0x6f, 0x0b, 0xf3, 0xcd, 0x16,
-	0xf0, 0x7d, 0x63, 0x2e, 0xc7, 0x91, 0xfb, 0xcd, 0xf0, 0xab, 0x66, 0x7f, 0x01, 0x1e, 0xff, 0xd3,
-	0x06, 0x89, 0x8e, 0xb2, 0x74, 0x47, 0x9e, 0xe5, 0x3b, 0x4b, 0x27, 0xe8, 0x90, 0xe8, 0xfd, 0xe6,
-	0x1f, 0x56, 0xff, 0x34, 0xfb, 0x03, 0xf3, 0xc6, 0x27, 0x3c, 0x1c, 0x14, 0x12, 0xb5, 0x45, 0x6f,
-	0x21, 0xfb, 0x0d, 0xd0, 0x00, 0x93, 0xab, 0xae, 0x3f, 0x17, 0x3d, 0xd2, 0xb9, 0xdc, 0xa5, 0x84,
-	0x4f, 0x2a, 0x77, 0x87, 0x7d, 0x97, 0x16, 0x32, 0x0f, 0x9c, 0x70, 0xbf, 0x47, 0xa2, 0xad, 0x3c,
-	0x61, 0x13, 0xd4, 0x16, 0x7d, 0x54, 0x77, 0x19, 0x56, 0xc7, 0x55, 0x9a, 0xe7, 0xe4, 0x8e, 0x3d,
-	0xcb, 0x1f, 0x89, 0xab, 0xe6, 0x6b, 0x80, 0x44, 0x66, 0x02, 0xdf, 0xce, 0x48, 0xa6, 0x62, 0x22,
-	0xb3, 0x08, 0x69, 0x1f, 0x97, 0xbb, 0xb4, 0xc8, 0xbf, 0x72, 0xdf, 0x40, 0xf6, 0x0b, 0xec, 0xed,
-	0xb1, 0x40, 0xd2, 0x69, 0x51, 0x99, 0xd8, 0x43, 0xd1, 0x01, 0xbe, 0x03, 0xc7, 0x38, 0xb6, 0x63,
-	0xff, 0x01, 0xe3, 0x44, 0x66, 0x71, 0xd4, 0x5a, 0x35, 0x82, 0xfd, 0x84, 0xc9, 0x46, 0xa7, 0xfa,
-	0x4c, 0xed, 0xd8, 0x5b, 0x55, 0x5b, 0xaf, 0x14, 0xa6, 0x1a, 0x0f, 0xa1, 0x36, 0xed, 0x0e, 0x45,
-	0x07, 0x96, 0x2f, 0xe0, 0x3c, 0x9f, 0x91, 0x56, 0xb2, 0xd4, 0x4a, 0xe6, 0x8c, 0xc3, 0xf4, 0x01,
-	0x75, 0xbd, 0x64, 0x36, 0x09, 0xcc, 0xd2, 0x17, 0xf3, 0xa0, 0xbf, 0x73, 0x3e, 0x60, 0x3e, 0xd8,
-	0x11, 0x56, 0xb9, 0xbc, 0x24, 0x32, 0x63, 0x4e, 0xd0, 0xf5, 0xba, 0x98, 0x05, 0xbd, 0x98, 0x7c,
-	0x90, 0x4d, 0xcc, 0xfb, 0xf9, 0xf7, 0x19, 0x00, 0x00, 0xff, 0xff, 0xd6, 0xaf, 0x4e, 0x7e, 0x4f,
-	0x02, 0x00, 0x00,
+var fileDescriptor_server_7c8bbf4131488981 = []byte{
+	// 376 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0xd1, 0x6a, 0xa3, 0x40,
+	0x14, 0x86, 0xe3, 0x26, 0x9a, 0xf5, 0x24, 0x59, 0xd8, 0x61, 0x59, 0x24, 0x84, 0x65, 0x19, 0x96,
+	0x25, 0x57, 0x2e, 0x6c, 0x9f, 0xa0, 0x8d, 0xa1, 0x28, 0x84, 0x16, 0x53, 0x0a, 0xe9, 0xdd, 0x98,
+	0x9c, 0x10, 0x41, 0x1d, 0x3b, 0x33, 0x96, 0xe4, 0x1d, 0xfa, 0x8a, 0x7d, 0x97, 0xe2, 0x68, 0xa3,
+	0xb6, 0x17, 0xbd, 0xf3, 0x7c, 0xfe, 0x33, 0xdf, 0xe1, 0xcc, 0x81, 0xb1, 0x44, 0xf1, 0x84, 0xc2,
+	0xcd, 0x05, 0x57, 0x9c, 0x0e, 0xc1, 0x5c, 0xa6, 0xb9, 0x3a, 0xd1, 0x7b, 0x18, 0xfb, 0xd9, 0x9e,
+	0x87, 0x28, 0x73, 0x9e, 0x49, 0x24, 0x04, 0x06, 0xb7, 0x5c, 0x28, 0xc7, 0xf8, 0x6d, 0xcc, 0xed,
+	0x50, 0x7f, 0x93, 0x29, 0x7c, 0x5d, 0xeb, 0xc3, 0xbe, 0xe7, 0x7c, 0xd1, 0xfc, 0x5c, 0x93, 0x9f,
+	0x60, 0x1d, 0x90, 0x25, 0xea, 0xe0, 0xf4, 0xf5, 0x9f, 0xba, 0xa2, 0x7b, 0x80, 0x80, 0x47, 0x21,
+	0x3e, 0x16, 0x28, 0x15, 0xf9, 0x03, 0x93, 0x80, 0x47, 0x1e, 0xca, 0xad, 0x9f, 0x6d, 0x58, 0x9a,
+	0xd4, 0xd7, 0x77, 0x21, 0x99, 0x81, 0x7d, 0x17, 0xa7, 0x28, 0x15, 0x4b, 0x73, 0x2d, 0xea, 0x87,
+	0x0d, 0x20, 0x3f, 0xc0, 0x0c, 0x78, 0xe4, 0x7b, 0xb5, 0xa8, 0x2a, 0xe8, 0x06, 0x46, 0xda, 0x53,
+	0xb7, 0x7f, 0x0e, 0x19, 0xad, 0x50, 0xd9, 0xe4, 0x5a, 0x31, 0x55, 0xc8, 0xba, 0xfd, 0xba, 0x2a,
+	0x85, 0x0b, 0x81, 0x4c, 0xe1, 0xee, 0x52, 0xe9, 0x6b, 0xfb, 0x61, 0x03, 0xe8, 0x8b, 0x01, 0xdf,
+	0x75, 0x83, 0x8a, 0xc5, 0xc9, 0x27, 0x86, 0x19, 0xd8, 0x01, 0x8f, 0x3a, 0x92, 0x06, 0x90, 0xbf,
+	0xf0, 0x6d, 0xc5, 0x8e, 0x57, 0x45, 0x9c, 0xec, 0x96, 0x42, 0x70, 0x21, 0xb5, 0xcc, 0x0c, 0xdf,
+	0x51, 0xf2, 0x0b, 0x60, 0xc5, 0x8e, 0x21, 0x2a, 0x11, 0xa3, 0x74, 0x06, 0x3a, 0xd3, 0x22, 0xe5,
+	0x18, 0xab, 0xe4, 0xcd, 0x76, 0x5b, 0x08, 0xdc, 0x39, 0xa6, 0x8e, 0x74, 0x61, 0x69, 0xab, 0x0f,
+	0xbc, 0xc5, 0xac, 0xca, 0xd6, 0xa5, 0xff, 0x9f, 0x0d, 0x18, 0x3d, 0x14, 0x28, 0x17, 0x3c, 0x53,
+	0x82, 0x27, 0x84, 0xc2, 0xf0, 0x1a, 0x55, 0xb9, 0x0d, 0xc4, 0x72, 0xf5, 0x76, 0x4c, 0x27, 0x6e,
+	0x7b, 0x39, 0x68, 0x8f, 0xcc, 0xc1, 0xf6, 0x30, 0x4f, 0xf8, 0x29, 0xe0, 0x11, 0x19, 0xb9, 0xcd,
+	0x13, 0x4f, 0xc7, 0x6e, 0xeb, 0x1d, 0x68, 0x8f, 0xfc, 0xd3, 0x0b, 0x50, 0x0d, 0x4f, 0x76, 0xa3,
+	0xc4, 0xfd, 0x30, 0x56, 0xda, 0x8b, 0x2c, 0xbd, 0x99, 0x17, 0xaf, 0x01, 0x00, 0x00, 0xff, 0xff,
+	0xec, 0x0f, 0x44, 0x75, 0xa9, 0x02, 0x00, 0x00,
 }

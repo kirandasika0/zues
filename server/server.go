@@ -1,9 +1,7 @@
 package server
 
 import (
-	"errors"
 	"net"
-	"zues/kube"
 	"zues/util"
 
 	"github.com/kataras/golog"
@@ -23,7 +21,7 @@ type Server struct {
 	Port          string             `json:"port"`
 	ServerID      string             `json:"serverId"`
 	Configuration iris.Configuration `json:"-"`
-	K8sSession    *kube.K8sSession   `json:"k8sSession"`
+	Health        string             `json:"health"`
 }
 
 // New creates a new instance of the zues server
@@ -50,6 +48,7 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	}
 
 	s.ServerID = "zues-master-" + util.RandomString(8)
+	s.Health = "healthy"
 
 	return &s
 }
@@ -59,15 +58,6 @@ func (s *Server) Start(l net.Listener) {
 	// Start the server with the config and other parameters
 	golog.Print("Starting Server...")
 	s.Application.Run(iris.Listener(l))
-}
-
-// SetKubeSession binds the current K8s session to the server
-func (s *Server) SetKubeSession(kubeSession *kube.K8sSession) error {
-	if kubeSession == nil {
-		return errors.New("please provide a k8s session")
-	}
-	s.K8sSession = kubeSession
-	return nil
 }
 
 func getDefaultIrisConfiguration() iris.Configuration {

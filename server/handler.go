@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"zues/config"
-	"zues/kube"
 	"zues/stest"
 	"zues/util"
 
@@ -25,23 +24,7 @@ func indexHandler(ctx iris.Context) {
 	util.BuildResponse(ctx, zuesBaseConfig)
 }
 
-func getPods(ctx iris.Context) {
-	namespace := ctx.Params().Get("namespace")
-	body, err := util.GetHTTPBody(kube.APIServer, fmt.Sprintf("/api/v1/namespaces/%s/pods", namespace))
-	if err != nil {
-		golog.Error(err)
-	}
-
-	pods, err := ZuesServer.K8sSession.GetPodsFromAPIServer(body)
-	if err != nil {
-		golog.Error(err)
-	}
-	if len(pods) == 0 {
-		util.BuildErrorResponse(ctx, err.Error())
-	} else {
-		util.BuildResponse(ctx, pods)
-	}
-}
+func getPods(ctx iris.Context) {}
 
 func stressTestHandler(ctx iris.Context) {
 	// Procedure to set up stress tests
@@ -85,54 +68,10 @@ func stressTestStatusHandler(ctx iris.Context) {
 	util.BuildResponse(ctx, value)
 }
 
-func getServices(ctx iris.Context) {
-	namespace := ctx.Params().Get("namespace")
-	body, err := util.GetHTTPBody(kube.APIServer, fmt.Sprintf("/api/v1/namespaces/%s/services", namespace))
-	if err != nil {
-		golog.Error(err)
-	}
-	services, err := ZuesServer.K8sSession.GetServicesFromAPIServer(body)
-	if err != nil {
-		golog.Error(err)
-	}
-	util.BuildResponse(ctx, services)
-}
+func getServices(ctx iris.Context) {}
 
-func createPodHandler(ctx iris.Context) {
-	requestData, err := util.ExtractHTTPBody(ctx.Request())
-	if err != nil {
-		golog.Error(err)
-		util.BuildErrorResponse(ctx, err.Error())
-		return
-	}
+func createPodHandler(ctx iris.Context) {}
 
-	pod, err := ZuesServer.K8sSession.CreatePodWithNamespace(requestData, ctx.Params().Get("namespace"))
+func serverInfoHandler(ctx iris.Context) { util.BuildResponse(ctx, ZuesServer) }
 
-	if err != nil {
-		util.BuildErrorResponse(ctx, err.Error())
-		return
-	}
-	util.BuildResponse(ctx, pod)
-}
-
-func serverInfoHandler(ctx iris.Context) {
-	util.BuildResponse(ctx, ZuesServer)
-}
-
-func deletePodHandler(ctx iris.Context) {
-	podName := ctx.Params().Get("podName")
-	namespace := ctx.Params().Get("namespace")
-	uid := ctx.Params().Get("uid")
-	if len(podName) < 1 || len(namespace) < 1 {
-		util.BuildErrorResponse(ctx, "need a pod name to delete.")
-		return
-	}
-
-	pod, err := ZuesServer.K8sSession.DeletePodWithNamespace(podName, namespace, uid)
-	if err != nil {
-		util.BuildErrorResponse(ctx, err.Error())
-		return
-	}
-
-	util.BuildResponse(ctx, pod)
-}
+func deletePodHandler(ctx iris.Context) {}

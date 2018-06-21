@@ -26,6 +26,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// Start the K8s session
+	kube.Session = kube.New()
+
 	m := cmux.New(listener)
 	grpcListener := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
 	httpListener := m.Match(cmux.HTTP1Fast())
@@ -41,8 +45,6 @@ func main() {
 
 func serveHTTPServer(l net.Listener) error {
 	server.ZuesServer = server.New(nil, "")
-	kube.K8sGlobalSession = kube.New()
-	server.ZuesServer.SetKubeSession(kube.K8sGlobalSession)
 	server.ZuesServer.Start(l)
 	return nil
 }
@@ -50,6 +52,6 @@ func serveHTTPServer(l net.Listener) error {
 func servegRPCServer(l net.Listener) error {
 	golog.Println("Starting gRPC server...")
 	s := grpc.NewServer()
-	pb.RegisterZuesControlServer(s, &rpc.RPCServer{})
+	pb.RegisterZuesControlServer(s, &rpc.GRPCServer{})
 	return s.Serve(l)
 }
