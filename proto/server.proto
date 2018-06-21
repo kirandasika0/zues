@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+service ZuesControl {
+    rpc GetInfo(Empty) returns (InfoResponse) {}
+}
+
+message Empty {}
+
+message InfoResponse {
+    string Port = 1;
+    string ServerID = 2;
+    K8sSession K8sSession = 4;
+}
+
+message K8sSession {
+    string ServerAddress = 1;
+    uint32 ServerPort = 2;
+    string ServerBaseUrl = 3;
+    string AccessToken = 4;
+    uint64 ApiCalls = 5;
+}
