@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"io/ioutil"
-	"sync"
+	"os"
 	"time"
 	pb "zues/proto"
 	"zues/util"
@@ -13,17 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var wg = sync.WaitGroup{}
-
 func main() {
-	for i := 0; i < 4; i++ {
-		wg.Add(1)
-		go getResponse()
-	}
-	wg.Wait()
-}
-
-func getResponse() {
 	conn, err := grpc.Dial("localhost:8284", grpc.WithInsecure())
 	if err != nil {
 		golog.Error(err)
@@ -31,7 +21,6 @@ func getResponse() {
 	defer conn.Close()
 
 	c := pb.NewZuesControlClient(conn)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	content, _ := ioutil.ReadFile("../zues-config.yaml")
@@ -40,10 +29,31 @@ func getResponse() {
 	res, err := c.DeployJob(ctx, jobRequest)
 	if err != nil {
 		golog.Error(err)
+		os.Exit(1)
 	}
-	jDetails, err := c.JobDetails(ctx, &pb.JobRequest{
+
+	for i := 0; i < 20; i++ {
+		ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		jDetails, err := c.JobDetails(ctx, &pb.JobRequest{
+			JobID: res.JobID,
+		})
+		if err != nil {
+			golog.Error(err)
+			break
+		}
+		golog.Infof("%+v", jDetails)
+		time.Sleep(2 * time.Second)
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err = c.DeleteJob(ctx, &pb.JobRequest{
 		JobID: res.JobID,
 	})
-	golog.Infof("%+v", jDetails)
-	wg.Done()
+	if err != nil {
+		golog.Error(err)
+		os.Exit(1)
+	}
+	golog.Infof("JobID: %s deleted", res.JobID)
 }
