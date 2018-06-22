@@ -1,7 +1,13 @@
 package config
 
-// CurrentJobs hold all the in memory jobs
-var CurrentJobs = map[string]Config{}
+import apiv1 "k8s.io/api/core/v1"
+
+var (
+	// CurrentJobs hold all the in memory jobs
+	CurrentJobs = map[string]Config{}
+	// JobPodsMap stores all the Pods that are associated with the CurrentJob
+	JobPodsMap = map[string]*apiv1.Pod{}
+)
 
 // Config defines a yaml configuration given by the developer
 type Config struct {
@@ -14,6 +20,7 @@ type Config struct {
 type Spec struct {
 	Name             string       `yaml:"name,omitempty" json:"name,omitempty"`
 	Namespace        string       `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Image            string       `yaml:"image,omitempty" json:"image,omitempty"`
 	MaxBuildErrors   int32        `yaml:"maxBuildErrors,omitempty" json:"maxBuildErrors,omitempty"`
 	MaxRetries       int32        `yaml:"maxRetries,omitempty" json:"maxRetries,omitempty"`
 	GatherStatistics bool         `yaml:"gatherStatistics,omitempty" json:"gatherStatistics,omitempty"`
