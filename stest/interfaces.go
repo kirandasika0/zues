@@ -111,12 +111,12 @@ func (s *StressTest) ExecuteEnvironment() {
 	// Dump buffer is it exceeds the MaxResponseBuffer and reset executionTrace
 	// if needed to save memory
 	startTime := time.Now().UnixNano()
-	fmt.Printf("Start stress test %s at %d\n", s.ID, startTime)
+	golog.Infof("Start stress test %s at %d", s.ID, startTime)
 
 	// Calculate number of chunks
 	nChunks := int(int(s.Spec.NumRequests) / MaxRoutineChunk)
 	for i := 0; i < nChunks; i++ {
-		fmt.Printf("TEST: %s CHUNK: %d\n", s.ID, i+1)
+		golog.Infof("TEST: %s CHUNK: %d", s.ID, i+1)
 		// Creating a channel to wait for 25 requests to finish
 		chunkCompleteCh := make(chan struct{})
 

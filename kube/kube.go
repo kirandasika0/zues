@@ -2,8 +2,10 @@ package kube
 
 import (
 	"flag"
+	"fmt"
 	"path/filepath"
 	"strings"
+	"zues/config"
 	"zues/util"
 
 	"k8s.io/apimachinery/pkg/watch"
@@ -20,9 +22,13 @@ import (
 
 // Sessionv1 is a struct to represent the global K8s session
 type Sessionv1 struct {
-	clientSet  *kubernetes.Clientset
-	apiCalls   uint64
-	hasStarted bool
+	clientSet    *kubernetes.Clientset
+	apiCalls     uint64
+	hasStarted   bool
+	addedChan    chan *apiv1.Pod
+	deletedChan  chan *apiv1.Pod
+	modifiedChan chan *apiv1.Pod
+	errorChan    chan *apiv1.Pod
 }
 
 var (
@@ -60,6 +66,14 @@ func New() *Sessionv1 {
 	s.apiCalls = 0
 	s.clientSet = clientset
 	s.hasStarted = false
+	s.addedChan = make(chan *apiv1.Pod)
+	s.modifiedChan = make(chan *apiv1.Pod)
+	s.deletedChan = make(chan *apiv1.Pod)
+	s.errorChan = make(chan *apiv1.Pod)
+
+	// This go routine handles differnt types of events sent by the k8s server
+	// Will be monitoring all the different events behind the scenes
+	go s.handlePodEvent()
 
 	return &s
 }
@@ -169,17 +183,56 @@ func (s *Sessionv1) WatchPodEvents() {
 		}
 		switch event.Type {
 		case watch.Added:
-			golog.Infof("Pod %s added", pod.ObjectMeta.Name)
+			s.addedChan <- pod
 		case watch.Modified:
-			golog.Infof("Pod %s modified", pod.ObjectMeta.Name)
-			for _, c := range pod.Status.ContainerStatuses {
-				golog.Info(c.State.Waiting, c.State.Running, c.State.Terminated)
-			}
+			s.modifiedChan <- pod
 		case watch.Error:
-			golog.Errorf("Error in pod %s", pod.ObjectMeta.Name)
+			s.errorChan <- pod
 		case watch.Deleted:
-			golog.Infof("Pod %s deleted", pod.ObjectMeta.Name)
+			s.deletedChan <- pod
 		}
 	}
 
+	close(s.addedChan)
+	close(s.modifiedChan)
+	close(s.errorChan)
+	close(s.deletedChan)
+}
+
+func (s *Sessionv1) handlePodEvent() {
+	for {
+		select {
+		case pod := <-s.addedChan:
+			golog.Infof("ADDED Pod %s", pod.ObjectMeta.Name)
+		case pod := <-s.modifiedChan:
+			jobID, err := config.MatchJobIDWithPod(pod.ObjectMeta.Name)
+			if err != nil {
+				golog.Errorf("Could not find JobID with Pod %s", pod.ObjectMeta.Name)
+				continue
+			}
+			config.JobPodsMap[jobID] = pod
+		case pod := <-s.errorChan:
+			golog.Errorf("Error Pod %s", pod.ObjectMeta.Name)
+		case pod := <-s.deletedChan:
+			golog.Infof("Pod %s DELETED", pod.ObjectMeta.Name)
+		}
+	}
+}
+
+// for _, c := range pod.Status.ContainerStatuses {
+// 	// Check if the container is terminated
+// 	if c.State.Terminated != nil {
+// 		golog.Infof("TERMINATION Pod: %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Terminated.Reason, c.RestartCount)
+// 	} else if c.State.Waiting != nil {
+// 		golog.Infof("WAITING Pod %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Waiting.Reason, c.RestartCount)
+// 	} else if c.State.Running != nil {
+// 		golog.Infof("RUNNING Pod %s StartedAt: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Running.StartedAt, c.RestartCount)
+// 	}
+// }
+
+func (s *Sessionv1) shouldTerminate(jobID string) (bool, error) {
+	if jobID == "" {
+		return false, fmt.Errorf("Please provide a jobID")
+	}
+	return false, nil
 }

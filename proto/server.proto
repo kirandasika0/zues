@@ -36,4 +36,11 @@ message JobDetailResponse {
     int32 MaxRetries = 4;
     int32 ErrorsOccured = 5;
     int32 RetriesOccured = 6;
+    JobContainerStatus ContainerStatus = 7;
+}
+
+message JobContainerStatus {
+    string DockerId = 1;
+    string State = 2;
+    string Reason = 3;
 }

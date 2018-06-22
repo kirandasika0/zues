@@ -73,18 +73,39 @@ func (s *GRPCServer) JobDetails(ctx context.Context, req *pb.JobRequest) (*pb.Jo
 	}
 
 	var restarts int32
+	var containerStatus pb.JobContainerStatus
+
 	for _, c := range jobPod.Status.ContainerStatuses {
 		restarts += c.RestartCount
+		// Looks like the pod is terminated
+		if c.State.Terminated != nil {
+			containerStatus.DockerId = c.State.Terminated.ContainerID
+			containerStatus.State = "Terminated"
+			containerStatus.Reason = c.State.Terminated.Reason
+		} else if c.State.Waiting != nil {
+			containerStatus.DockerId = c.ContainerID
+			containerStatus.State = "Waiting"
+			containerStatus.Reason = c.State.Waiting.Reason
+		} else if c.State.Running != nil {
+			containerStatus.DockerId = c.ContainerID
+			containerStatus.State = "Running"
+			containerStatus.Reason = ""
+		}
 	}
 
 	jobResponse := &pb.JobDetailResponse{
-		JobID:          req.JobID,
-		JobStatus:      string(jobPod.Status.Phase),
-		MaxBuildErrors: job.Spec.MaxBuildErrors,
-		MaxRetries:     job.Spec.MaxRetries,
-		ErrorsOccured:  restarts,
+		JobID:           req.JobID,
+		JobStatus:       string(jobPod.Status.Phase),
+		MaxBuildErrors:  job.Spec.MaxBuildErrors,
+		MaxRetries:      job.Spec.MaxRetries,
+		ErrorsOccured:   restarts,
+		ContainerStatus: &containerStatus,
 	}
-	golog.Infof("JobID: %s Pod: %s Status: %s", req.JobID, jobPod.ObjectMeta.Name, jobPod.Status.Phase)
+	// if containerStatus.Reason != "" {
+	// 	golog.Infof("JobID: %s Pod: %s Status: %s", req.JobID, jobPod.ObjectMeta.Name, containerStatus.Reason)
+	// } else {
+	// 	golog.Infof("JobID: %s Pod: %s Status: %s", req.JobID, jobPod.ObjectMeta.Name, containerStatus.State)
+	// }
 	return jobResponse, nil
 }
 
