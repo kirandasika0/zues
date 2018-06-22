@@ -11,15 +11,15 @@ spec:
   serverPort: 80
   tests:
     - id: 1
-      name: "my test 1"
+      name: "My Test 1"
       type: "GET"
-      endpoint: "/delay/5?foo=bar&bar=baz"
+      endpoint: "/delay/1?foo=bar&bar=baz"
       validResponseCodes:
         - 200
         - 201
 
     - id: 2
-      name: "my test 2"
+      name: "My Test 2"
       type: "POST"
       endpoint: "/post"
       validResponseCodes:
