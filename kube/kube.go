@@ -6,6 +6,10 @@ import (
 	"strings"
 	"zues/util"
 
+	"k8s.io/apimachinery/pkg/watch"
+
+	"github.com/kataras/golog"
+
 	"os"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -16,8 +20,9 @@ import (
 
 // Sessionv1 is a struct to represent the global K8s session
 type Sessionv1 struct {
-	clientSet *kubernetes.Clientset
-	apiCalls  uint64
+	clientSet  *kubernetes.Clientset
+	apiCalls   uint64
+	hasStarted bool
 }
 
 var (
@@ -29,7 +34,7 @@ var (
 func New() *Sessionv1 {
 	var kubeconfig *string
 	if os.Getenv("IN_CLUSTER") == "true" {
-
+		// TODO
 	} else {
 		if home := homeDir(); home != "" {
 			kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -54,6 +59,7 @@ func New() *Sessionv1 {
 	var s Sessionv1
 	s.apiCalls = 0
 	s.clientSet = clientset
+	s.hasStarted = false
 
 	return &s
 }
@@ -69,6 +75,12 @@ func (s *Sessionv1) CreatePod(serviceName, namespace string, labels map[string]s
 		Spec: apiv1.PodSpec{
 			Containers: []apiv1.Container{
 				container,
+			},
+			ImagePullSecrets: []apiv1.LocalObjectReference{
+				{
+					// TODO: remove this and make this a environment variable
+					Name: "secqat",
+				},
 			},
 		},
 	})
@@ -127,18 +139,47 @@ func homeDir() string {
 }
 
 // CreateContainer creates a K8s container with the given parameters
-func CreateContainer(name, image string, ports ...int32) apiv1.Container {
-	containerPorts := make([]apiv1.ContainerPort, len(ports))
-	if len(ports) > 0 {
-		for _, port := range ports {
-			cPort := apiv1.ContainerPort{Name: "http", Protocol: apiv1.ProtocolTCP, ContainerPort: port}
-			containerPorts = append(containerPorts, cPort)
-		}
-	}
+func CreateContainer(name, image string, port int32) apiv1.Container {
 	return apiv1.Container{
 		Name:            name,
 		Image:           image,
 		ImagePullPolicy: apiv1.PullAlways,
-		Ports:           containerPorts,
+		Ports: []apiv1.ContainerPort{
+			{
+				Name:          "http", // Currently only supporting HTTP servers
+				Protocol:      apiv1.ProtocolTCP,
+				ContainerPort: port,
+			},
+		},
 	}
+}
+
+// WatchPodEvents watches events on Pods
+func (s *Sessionv1) WatchPodEvents() {
+	golog.Println("Watching Pod Events...")
+	watcher, err := s.clientSet.CoreV1().Pods("default").Watch(metav1.ListOptions{})
+	if err != nil {
+		golog.Errorf("Error occured: %s", err.Error())
+	}
+	for event := range watcher.ResultChan() {
+		pod, ok := event.Object.(*apiv1.Pod)
+		if !ok {
+			golog.Error("Failed to convert to a type of apiv1.Pod")
+			continue
+		}
+		switch event.Type {
+		case watch.Added:
+			golog.Infof("Pod %s added", pod.ObjectMeta.Name)
+		case watch.Modified:
+			golog.Infof("Pod %s modified", pod.ObjectMeta.Name)
+			for _, c := range pod.Status.ContainerStatuses {
+				golog.Info(c.State.Waiting, c.State.Running, c.State.Terminated)
+			}
+		case watch.Error:
+			golog.Errorf("Error in pod %s", pod.ObjectMeta.Name)
+		case watch.Deleted:
+			golog.Infof("Pod %s deleted", pod.ObjectMeta.Name)
+		}
+	}
+
 }

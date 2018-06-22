@@ -4,6 +4,7 @@ service ZuesControl {
     rpc GetInfo(Empty) returns (InfoResponse) {}
     rpc DeployJob(JobRequest) returns (JobResponse) {}
     rpc JobDetails(JobRequest) returns (JobDetailResponse) {}
+    rpc DeleteJob(JobRequest) returns (Empty) {}
 }
 
 message Empty {}

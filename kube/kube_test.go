@@ -47,4 +47,9 @@ func TestListPods(t *testing.T) {
 	if pods.Items == nil || err != nil {
 		t.Fail()
 	}
+
+	pods, err = s.ListPods("")
+	if pods.Items == nil || err != nil {
+		t.Fail()
+	}
 }
