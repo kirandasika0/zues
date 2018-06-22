@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/go-yaml/yaml"
 )
@@ -18,4 +19,14 @@ func GetConfigFromYAML(yamlStr []byte) (*Config, error) {
 	}
 
 	return &zuesBaseConfig, nil
+}
+
+// MatchJobIDWithPod returns the JobID given a podName
+func MatchJobIDWithPod(podName string) (string, error) {
+	for k, v := range JobPodsMap {
+		if v.ObjectMeta.Name == podName {
+			return k, nil
+		}
+	}
+	return "", fmt.Errorf("Could not find JobID for given Pod %s", podName)
 }
