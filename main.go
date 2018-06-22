@@ -29,6 +29,8 @@ func main() {
 
 	// Start the K8s session
 	kube.Session = kube.New()
+	// Start watching
+	go kube.Session.WatchPodEvents()
 
 	m := cmux.New(listener)
 	grpcListener := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
