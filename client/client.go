@@ -43,7 +43,7 @@ func main() {
 			break
 		}
 		golog.Infof("%+v", jDetails)
-		//time.Sleep(2 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second)

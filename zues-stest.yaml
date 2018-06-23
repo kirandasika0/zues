@@ -4,7 +4,7 @@ notify: true
 spec:
   selector:
     name: httpbin.org
-  numRequests: 100
+  numRequests: 200
   numConcurrent: 10
   restDuration: 1500 # restDuration will always be mentioned in ms
   serverType: "http"
@@ -33,6 +33,14 @@ spec:
         X-Requested-With: "XMLHttpRequest"
       auth:
         Bearer: "dGhpcyBpcyBhIHRva2VuCg=="
+    - id: 3
+      name: "My Test 3"
+      type: "GET"
+      endpoint: "/image/png"
+      validResponseCodes:
+        - 200
+        - 201
   executionOrder:
     - 1
+    - 3
     - 2
