@@ -3,6 +3,8 @@ package kube
 import (
 	"testing"
 
+	"github.com/kataras/golog"
+
 	appv1 "k8s.io/api/core/v1"
 )
 
@@ -46,6 +48,12 @@ func TestListPods(t *testing.T) {
 	pods, err := s.ListPods("default")
 	if pods.Items == nil || err != nil {
 		t.Fail()
+	}
+
+	for _, pod := range pods.Items {
+		for _, c := range pod.Spec.Containers {
+			golog.Infof("ENV: %v", c.Env)
+		}
 	}
 
 	pods, err = s.ListPods("")

@@ -85,6 +85,7 @@ func (s *Sessionv1) CreatePod(serviceName, namespace string, labels map[string]s
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: namespace,
+			Labels:    labels,
 		},
 		Spec: apiv1.PodSpec{
 			Containers: []apiv1.Container{
@@ -205,12 +206,28 @@ func (s *Sessionv1) handlePodEvent() {
 		case pod := <-s.addedChan:
 			golog.Infof("ADDED Pod %s", pod.ObjectMeta.Name)
 		case pod := <-s.modifiedChan:
+			for _, c := range pod.Status.ContainerStatuses {
+				// Check if the container is terminated
+				if c.State.Terminated != nil {
+					golog.Infof("TERMINATION Pod: %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Terminated.Reason, c.RestartCount)
+				} else if c.State.Waiting != nil {
+					golog.Infof("WAITING Pod %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Waiting.Reason, c.RestartCount)
+				} else if c.State.Running != nil {
+					golog.Infof("RUNNING Pod %s StartedAt: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Running.StartedAt, c.RestartCount)
+				}
+			}
 			jobID, err := config.MatchJobIDWithPod(pod.ObjectMeta.Name)
 			if err != nil {
 				golog.Errorf("Could not find JobID with Pod %s", pod.ObjectMeta.Name)
 				continue
 			}
 			config.JobPodsMap[jobID] = pod
+			// Delete the Pod if it has crossed the number of build errors
+			if deleteFlag, err := s.shouldTerminate(jobID); err != nil {
+				golog.Errorf(err.Error())
+			} else if deleteFlag {
+				s.DeletePod(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
+			}
 		case pod := <-s.errorChan:
 			golog.Errorf("Error Pod %s", pod.ObjectMeta.Name)
 		case pod := <-s.deletedChan:
@@ -219,20 +236,19 @@ func (s *Sessionv1) handlePodEvent() {
 	}
 }
 
-// for _, c := range pod.Status.ContainerStatuses {
-// 	// Check if the container is terminated
-// 	if c.State.Terminated != nil {
-// 		golog.Infof("TERMINATION Pod: %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Terminated.Reason, c.RestartCount)
-// 	} else if c.State.Waiting != nil {
-// 		golog.Infof("WAITING Pod %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Waiting.Reason, c.RestartCount)
-// 	} else if c.State.Running != nil {
-// 		golog.Infof("RUNNING Pod %s StartedAt: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Running.StartedAt, c.RestartCount)
-// 	}
-// }
-
 func (s *Sessionv1) shouldTerminate(jobID string) (bool, error) {
 	if jobID == "" {
 		return false, fmt.Errorf("Please provide a jobID")
+	}
+	job, ok := config.CurrentJobs[jobID]
+	if !ok {
+		return false, fmt.Errorf("No job with id %s", jobID)
+	}
+	pod := config.JobPodsMap[jobID]
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.RestartCount >= job.Spec.MaxBuildErrors {
+			return true, nil
+		}
 	}
 	return false, nil
 }
