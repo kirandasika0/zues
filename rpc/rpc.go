@@ -79,11 +79,11 @@ func (s *GRPCServer) JobDetails(ctx context.Context, req *pb.JobRequest) (*pb.Jo
 		restarts += c.RestartCount
 		// Looks like the pod is terminated
 		if c.State.Terminated != nil {
-			containerStatus.DockerId = c.State.Terminated.ContainerID
+			containerStatus.DockerId = c.Image
 			containerStatus.State = "Terminated"
 			containerStatus.Reason = c.State.Terminated.Reason
 		} else if c.State.Waiting != nil {
-			containerStatus.DockerId = c.ContainerID
+			containerStatus.DockerId = c.Image
 			containerStatus.State = "Waiting"
 			containerStatus.Reason = c.State.Waiting.Reason
 		} else if c.State.Running != nil {

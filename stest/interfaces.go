@@ -41,15 +41,16 @@ func New(config []byte) (*StressTest, error) {
 	for i, st := range newStressTest.Spec.Tests {
 		startTime := time.Now().Unix()
 		InMemoryTests[newStressTest.ID][i] = statisticalTelemetry{
-			TestID:    st.ID,
-			Name:      st.Name,
-			Completed: 0,
-			Remaining: newStressTest.Spec.NumRequests,
-			Total:     newStressTest.Spec.NumRequests,
-			Success:   0,
-			Status:    TestStatusCreated,
-			UpdatedAt: startTime,
-			CreatedAt: startTime,
+			TestID:          st.ID,
+			Name:            st.Name,
+			Completed:       0,
+			Remaining:       newStressTest.Spec.NumRequests,
+			Total:           newStressTest.Spec.NumRequests,
+			AvgResponseTime: 0,
+			Success:         0,
+			Status:          TestStatusCreated,
+			UpdatedAt:       startTime,
+			CreatedAt:       startTime,
 		}
 	}
 	return &newStressTest, nil
@@ -121,9 +122,9 @@ func (s *StressTest) ExecuteEnvironment() {
 		chunkCompleteCh := make(chan struct{})
 
 		// errorChan will only be updated if a invalid response code is received
-		errorChan := make(chan int16)
+		errorChan := make(chan tempStatisticalTelemetry)
 		// successChan will only be updated if a successful response code is received
-		successChan := make(chan int16)
+		successChan := make(chan tempStatisticalTelemetry)
 
 		statUpdateDoneChan := make(chan struct{})
 
@@ -179,7 +180,7 @@ func (s *StressTest) processWorkerResponse(statUpdateDoneChan chan<- struct{}, c
 	}
 }
 
-func (s *StressTest) startWorkers(chunkCompleteChan chan<- struct{}, successChan, errorChan chan<- int16) {
+func (s *StressTest) startWorkers(chunkCompleteChan chan<- struct{}, successChan, errorChan chan<- tempStatisticalTelemetry) {
 	for i := 0; i < MaxRoutineChunk; i++ {
 		qLen := s.localTelemetry.scheduler.Len()
 		items, err := s.localTelemetry.scheduler.Get(qLen)
@@ -209,12 +210,15 @@ func (s *StressTest) startWorkers(chunkCompleteChan chan<- struct{}, successChan
 }
 
 // Pass the request in as a parameter and update the queue in the startRoutines
-func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- int16) {
+func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- tempStatisticalTelemetry) {
 	// Create a HTTP request
 	req := buildRequest(incomingReq.Type, s.Spec.ServerPort,
 		s.Spec.Selector["name"], incomingReq.Endpoint,
 		incomingReq.Body, incomingReq.Headers)
+	reqStartTime := time.Now().Unix()
 	statusCode, _, err := util.GetHTTPResponse(req)
+	elapsedTime := time.Now().Unix() - reqStartTime
+	tempStTelemetry := tempStatisticalTelemetry{elapsedTime: elapsedTime, testID: incomingReq.ID}
 	if err != nil {
 		golog.Errorf("Error while getting response [Status Code: %d]: %s", statusCode, err.Error())
 	}
@@ -222,10 +226,10 @@ func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- in
 	if !isValidResponse(incomingReq, int16(statusCode)) {
 		golog.Errorf("ID: %s Error in status code expected %v got %d", s.ID, incomingReq.ValidResponseCodes, statusCode)
 		// Updating the errorChan to process error in request
-		errorChan <- incomingReq.ID
+		errorChan <- tempStTelemetry
 	} else {
 		// golog.Info(fmt.Sprintf("%s", res))
-		successChan <- incomingReq.ID
+		successChan <- tempStTelemetry
 	}
 	// Update queue
 	s.localTelemetry.executionQueue.Put(incomingReq)
@@ -265,19 +269,22 @@ func isValidResponse(executedTest *test, responseStatusCode int16) bool {
 	return false
 }
 
-func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan int16, statUpdateDoneChan <-chan struct{}) {
+func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan tempStatisticalTelemetry, statUpdateDoneChan <-chan struct{}) {
 
 	for {
 		select {
-		case testID := <-successChan:
-			//golog.Println(fmt.Sprintf("Success received for test %d", testID))
+		case exTest := <-successChan:
+			//golog.Infof("Success received for test %d", exTest.testID)
 			s.localTelemetry.updateMutex.Lock()
 			// Lock no ensure no race condition
-			sTelemetry := &InMemoryTests[s.ID][testID-1]
-			// Update the parameters needed
+			sTelemetry := &InMemoryTests[s.ID][exTest.testID-1]
+			// Update the parameters
 			sTelemetry.Success++
 			sTelemetry.Completed++
 			sTelemetry.Remaining--
+			// Update the average response time
+			sTelemetry.AvgResponseTime += float64(exTest.elapsedTime)
+			sTelemetry.AvgResponseTime += sTelemetry.AvgResponseTime / float64(sTelemetry.Total)
 			// Update the timestamp to the latest timestamp
 			sTelemetry.UpdatedAt = time.Now().Unix()
 

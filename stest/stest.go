@@ -104,14 +104,20 @@ type stressTestRequest struct {
 // queried from the RPC or REST calls that come to this server
 // all other data will be available based on availability
 type statisticalTelemetry struct {
-	TestID    int16      `json:"test_id"`
-	Name      string     `json:"name"`
-	Completed uint16     `json:"completed"`
-	Remaining uint16     `json:"remaining"`
-	Total     uint16     `json:"total"`
-	Success   int        `json:"success"`
-	Status    TestStatus `json:"status"`
-	UpdatedAt int64      `json:"updated_at"`
-	CreatedAt int64      `json:"create_at"`
-	Elapsed   int64      `json:"elapsed"`
+	TestID          int16      `json:"test_id"`
+	Name            string     `json:"name"`
+	Completed       uint16     `json:"completed"`
+	Remaining       uint16     `json:"remaining"`
+	Total           uint16     `json:"total"`
+	Success         int        `json:"success"`
+	AvgResponseTime float64    `json:"avg_response_time"`
+	Status          TestStatus `json:"status"`
+	UpdatedAt       int64      `json:"updated_at"`
+	CreatedAt       int64      `json:"create_at"`
+	Elapsed         int64      `json:"elapsed"`
+}
+
+type tempStatisticalTelemetry struct {
+	elapsedTime int64
+	testID      int16
 }
