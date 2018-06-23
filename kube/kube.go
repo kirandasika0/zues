@@ -170,7 +170,9 @@ func CreateContainer(name, image string, port int32) apiv1.Container {
 }
 
 // WatchPodEvents watches events on Pods
-func (s *Sessionv1) WatchPodEvents() {
+func (s *Sessionv1) WatchPodEvents(startWatchChan <-chan struct{}) {
+	// Waiting for the server to startup
+	<-startWatchChan
 	golog.Println("Watching Pod Events...")
 	watcher, err := s.clientSet.CoreV1().Pods("default").Watch(metav1.ListOptions{})
 	if err != nil {
