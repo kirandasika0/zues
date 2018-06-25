@@ -6,9 +6,8 @@ ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
 WORKDIR $GOPATH/src/zues
 COPY . .
-RUN go get github.com/tools/godep
 RUN CGO_ENABLED=0 go install -a std
-RUN CGO_ENABLED=0 godep go build -ldflags '-d -w -s'
+RUN CGO_ENABLED=0 go build -ldflags '-d -w -s'
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 
@@ -18,6 +17,8 @@ ENV PATH=$GOPATH/bin:$PATH
 ENV DOCKER_ENV=true
 WORKDIR /zues
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+RUN mkdir ~/.kube
 COPY --from=build-env $GOPATH/src/zues/main .
+COPY ./kubeconfig .
 EXPOSE 8284
 ENTRYPOINT [ "./main" ]
