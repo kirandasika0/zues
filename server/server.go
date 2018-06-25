@@ -48,7 +48,7 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	}
 
 	s.ServerID = "zues-master-" + util.RandomString(8)
-	s.Health = "healthy"
+	s.Health = "ok"
 
 	return &s
 }
