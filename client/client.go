@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:8284", grpc.WithInsecure())
+	conn, err := grpc.Dial("137.135.124.197:80", grpc.WithInsecure())
 	if err != nil {
 		golog.Error(err)
 	}

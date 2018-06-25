@@ -2,8 +2,8 @@ apiVersion: v1alpha1
 type: ConfigSpec
 spec:
   name: candidate-service
-  image: acrQat.azurecr.io/candidate-service:9f53bbbdca53332049a2065b745e8b313123c8a3
-  namespace: default
+  image: acrQat.azurecr.io/candidate-service:sysz-testing
+  namespace: sysz
   maxBuildErrors: 20
   maxRetries: 3
   gatherSatistics: true
