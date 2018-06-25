@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sysz
+  namespace: sysz
+  labels:
+    app: sysz-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sysz-app
+  template:
+    metadata:
+      labels:
+        app: sysz-app
+    spec:
+      containers:
+        - name: sysz
+          image: acrQat.azurecr.io/sysz:v0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8284
+          env:
+            - name: IN_CLUSTER
+              valueFrom:
+                  configMapKeyRef:
+                    name: cluster-config
+                    key: in-cluster
+      imagePullSecrets:
+        - name: secqat

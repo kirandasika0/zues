@@ -173,7 +173,7 @@ func (s *Sessionv1) WatchPodEvents(startWatchChan <-chan struct{}) {
 	// Waiting for the server to startup
 	<-startWatchChan
 	golog.Println("Watching Pod Events...")
-	watcher, err := s.clientSet.CoreV1().Pods("default").Watch(metav1.ListOptions{})
+	watcher, err := s.clientSet.CoreV1().Pods("sysz").Watch(metav1.ListOptions{})
 	if err != nil {
 		golog.Errorf("Error occured: %s", err.Error())
 	}

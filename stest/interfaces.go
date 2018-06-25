@@ -295,8 +295,11 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan te
 				sTelemetry.Elapsed = time.Now().Unix() - sTelemetry.CreatedAt
 			}
 			s.localTelemetry.updateMutex.Unlock()
-		case testID := <-errorChan:
-			golog.Println(fmt.Sprintf("Error received for test %d", testID))
+		case exTest := <-errorChan:
+			sTelemetry := &InMemoryTests[s.ID][exTest.testID-1]
+			sTelemetry.Completed++
+			sTelemetry.Remaining--
+			golog.Println(fmt.Sprintf("Error received for test %d", exTest.testID))
 		case <-statUpdateDoneChan:
 			// Signal the main wg that you work is done
 			s.localTelemetry.wg.Done()
