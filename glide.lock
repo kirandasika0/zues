@@ -1,5 +1,5 @@
-hash: 105df3351760275cd59a2130b990960e6c0100c5f3671394c4cb71db7ac8f9d6
-updated: 2018-06-25T09:11:52.2183162-04:00
+hash: dd0b5e06bfbcfb0ec3fa73b0f86e7b792af1619687f0a7cf1d0b14cd404b5584
+updated: 2018-06-25T15:46:40.6951917-04:00
 imports:
 - name: github.com/aymerick/raymond
   version: b565731e1464263de0bda75f2e45d97b54b60110
@@ -44,6 +44,8 @@ imports:
   - OpenAPIv2
   - compiler
   - extensions
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/hashicorp/go-version
   version: 23480c0665776210b5fbbac6eaaee40e3e6a96b7
 - name: github.com/howeyc/gopass
