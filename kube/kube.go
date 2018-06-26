@@ -230,9 +230,13 @@ func (s *Sessionv1) handlePodEvent() {
 				s.DeletePod(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
 			}
 		case pod := <-s.errorChan:
-			golog.Errorf("Error Pod %s", pod.ObjectMeta.Name)
+			if pod != nil {
+				golog.Errorf("Error Pod %s", pod.ObjectMeta.Name)
+			}
 		case pod := <-s.deletedChan:
-			golog.Infof("Pod %s DELETED", pod.ObjectMeta.Name)
+			if pod != nil {
+				golog.Infof("Pod %s DELETED", pod.ObjectMeta.Name)
+			}
 		}
 	}
 }
