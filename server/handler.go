@@ -99,7 +99,7 @@ func stressTestStatusStreamHandler(ctx iris.Context) {
 	// Checking and/or creating a channel
 	var c *pubsub.Channel
 	c, err = pubsub.GetChannel(jobID)
-	if err != nil {
+	if c != nil {
 		c.AddListener(wsConn)
 	} else {
 		c, err = pubsub.NewChannel(jobID)
