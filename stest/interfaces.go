@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	pubsub "zues/dispatch"
 	"zues/util"
 
 	"github.com/kataras/golog"
@@ -224,7 +225,7 @@ func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- te
 	}
 	// Check to see if the response codes are correct
 	if !isValidResponse(incomingReq, int16(statusCode)) {
-		golog.Errorf("ID: %s Error in status code expected %v got %d", s.ID, incomingReq.ValidResponseCodes, statusCode)
+		// golog.Errorf("ID: %s Error in status code expected %v got %d", s.ID, incomingReq.ValidResponseCodes, statusCode)
 		// Updating the errorChan to process error in request
 		errorChan <- tempStTelemetry
 	} else {
@@ -295,15 +296,20 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan te
 				sTelemetry.Elapsed = time.Now().Unix() - sTelemetry.CreatedAt
 			}
 			s.localTelemetry.updateMutex.Unlock()
-			DispatchTestDataCh <- s.ID
+			// Signal only when listeners are available
+			if pubsub.GetListenerCount(s.ID) > 0 {
+				DispatchTestDataCh <- s.ID
+			}
 		case exTest := <-errorChan:
 			s.localTelemetry.updateMutex.Lock()
 			sTelemetry := &InMemoryTests[s.ID][exTest.testID-1]
 			sTelemetry.Completed++
 			sTelemetry.Remaining--
+			// golog.Println(fmt.Sprintf("Error received for test %d", exTest.testID))
 			s.localTelemetry.updateMutex.Unlock()
-			DispatchTestDataCh <- s.ID
-			golog.Println(fmt.Sprintf("Error received for test %d", exTest.testID))
+			if pubsub.GetListenerCount(s.ID) > 0 {
+				DispatchTestDataCh <- s.ID
+			}
 		case <-statUpdateDoneChan:
 			// Signal the main wg that you work is done
 			s.localTelemetry.wg.Done()

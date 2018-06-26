@@ -2,6 +2,7 @@ package server
 
 import (
 	"net"
+	pubsub "zues/dispatch"
 	"zues/stest"
 	"zues/util"
 
@@ -21,9 +22,6 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-
-	// JobListeners maps the a jobID to a slice of listeners
-	JobListeners = map[string][]*websocket.Conn{}
 )
 
 // Server holds all the necessary information for the zues HTTP API to function
@@ -61,6 +59,7 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	s.ServerID = "zues-master-" + util.RandomString(8)
 	s.Health = "ok"
 
+	// Handle streaming testData back to the connected websockets
 	go stressTestStreamDispatcher()
 
 	return &s
@@ -111,12 +110,16 @@ func stressTestStreamDispatcher() {
 	for {
 		select {
 		case jobID := <-stest.DispatchTestDataCh:
-			conns, ok := JobListeners[jobID]
-			if !ok {
-				break
+			c, err := pubsub.GetChannel(jobID)
+			if err != nil {
+				golog.Errorf(err.Error())
+				continue
 			}
-			for _, conn := range conns {
-				websocket.WriteJSON(conn, stest.InMemoryTests[jobID])
+			// Broadcasting the message to the listerns now
+			tests, _ := stest.InMemoryTests[jobID]
+			err = c.Broadcast(tests)
+			if err != nil {
+				golog.Errorf(err.Error())
 			}
 		}
 	}

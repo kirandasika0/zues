@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"zues/config"
+	pubsub "zues/dispatch"
 	"zues/stest"
 	"zues/util"
 
@@ -83,17 +84,30 @@ func stressTestStatusStreamHandler(ctx iris.Context) {
 
 	_, ok := stest.InMemoryTests[jobID]
 	if !ok {
+		golog.Errorf("job with id %s not found", jobID)
 		util.BuildErrorResponse(ctx, fmt.Sprintf("job with id %s not found", jobID))
 		return
 	}
 	// Upgrade connection if jobID is found in CurrentJobs
 	wsConn, err := upgrader.Upgrade(ctx.ResponseWriter(), ctx.Request(), nil)
 	if err != nil {
+		golog.Error(err.Error())
 		util.BuildErrorResponse(ctx, err.Error())
 		return
 	}
-	// Add the Websocket connection to the JobListeners map
-	JobListeners[jobID] = append(JobListeners[jobID], wsConn)
+
+	// Checking and/or creating a channel
+	var c *pubsub.Channel
+	c, err = pubsub.GetChannel(jobID)
+	if err != nil {
+		c.AddListener(wsConn)
+	} else {
+		c, err = pubsub.NewChannel(jobID)
+		if err != nil {
+			golog.Errorf("Error: %s", err.Error())
+		}
+		c.AddListener(wsConn)
+	}
 }
 
 func listJobsHandler(ctx iris.Context) {
