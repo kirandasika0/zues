@@ -68,6 +68,8 @@ func stressTestStatusHandler(ctx iris.Context) {
 	util.BuildResponse(ctx, value)
 }
 
+func listTestHandler(ctx iris.Context) { util.BuildResponse(ctx, stest.InMemoryTests) }
+
 func getServices(ctx iris.Context) {}
 
 func createPodHandler(ctx iris.Context) {}
@@ -75,3 +77,25 @@ func createPodHandler(ctx iris.Context) {}
 func serverInfoHandler(ctx iris.Context) { util.BuildResponse(ctx, ZuesServer) }
 
 func deletePodHandler(ctx iris.Context) {}
+
+func stressTestStatusStreamHandler(ctx iris.Context) {
+	jobID := ctx.Params().Get("job_id")
+
+	_, ok := stest.InMemoryTests[jobID]
+	if !ok {
+		util.BuildErrorResponse(ctx, fmt.Sprintf("job with id %s not found", jobID))
+		return
+	}
+	// Upgrade connection if jobID is found in CurrentJobs
+	wsConn, err := upgrader.Upgrade(ctx.ResponseWriter(), ctx.Request(), nil)
+	if err != nil {
+		util.BuildErrorResponse(ctx, err.Error())
+		return
+	}
+	// Add the Websocket connection to the JobListeners map
+	JobListeners[jobID] = append(JobListeners[jobID], wsConn)
+}
+
+func listJobsHandler(ctx iris.Context) {
+	util.BuildResponse(ctx, config.CurrentJobs)
+}

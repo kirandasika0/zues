@@ -45,9 +45,13 @@ const (
 	MaxRoutineChunk int = 25
 )
 
-// InMemoryTests is a map of all tests in memory. Tests are normally removed
-// a certain time if they are not used or accessed
-var InMemoryTests = map[string][]statisticalTelemetry{}
+var (
+	// InMemoryTests is a map of all tests in memory. Tests are normally removed
+	// a certain time if they are not used or accessed
+	InMemoryTests = map[string][]statisticalTelemetry{}
+	// DispatchTestDataCh is a channel to signal the stressTestStreamDispatcher func
+	DispatchTestDataCh = make(chan string)
+)
 
 // StressTest struct defines the parameters need for the stress test
 type StressTest struct {

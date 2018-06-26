@@ -2,8 +2,10 @@ package server
 
 import (
 	"net"
+	"zues/stest"
 	"zues/util"
 
+	"github.com/gorilla/websocket"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
@@ -13,6 +15,15 @@ import (
 var (
 	// ZuesServer Global ZuesServer instance
 	ZuesServer *Server
+
+	// Upgrader handles upgrading the HTTP request to a websocket connection
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	// JobListeners maps the a jobID to a slice of listeners
+	JobListeners = map[string][]*websocket.Conn{}
 )
 
 // Server holds all the necessary information for the zues HTTP API to function
@@ -50,6 +61,8 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	s.ServerID = "zues-master-" + util.RandomString(8)
 	s.Health = "ok"
 
+	go stressTestStreamDispatcher()
+
 	return &s
 }
 
@@ -79,12 +92,32 @@ func registerRoutes(s *Server) {
 	s.Application.Get("/", indexHandler)
 	s.Application.Get("/info", serverInfoHandler)
 	// kube package routes
+	s.Application.Get("/jobs", listJobsHandler)
 	s.Application.Get("/{namespace:string}/pods", getPods)
 	s.Application.Get("/{namespace: string}/services", getServices)
 	s.Application.Post("/{namespace: string}/pod/", createPodHandler)
 	s.Application.Delete("/pod/{namespace: string}/{podName :string}/{uid: string}", deletePodHandler)
 
 	// Stress test package routes
+	s.Application.Get("/tests", listTestHandler)
 	s.Application.Post("/test", stressTestHandler)
 	s.Application.Get("/test/status/{test_id: string}", stressTestStatusHandler)
+
+	// Stream handlers
+	s.Application.Get("/test/status/stream/{job_id: string}", stressTestStatusStreamHandler)
+}
+
+func stressTestStreamDispatcher() {
+	for {
+		select {
+		case jobID := <-stest.DispatchTestDataCh:
+			conns, ok := JobListeners[jobID]
+			if !ok {
+				break
+			}
+			for _, conn := range conns {
+				websocket.WriteJSON(conn, stest.InMemoryTests[jobID])
+			}
+		}
+	}
 }
