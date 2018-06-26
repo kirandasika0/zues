@@ -25,7 +25,8 @@ var seededRand *rand.Rand = rand.New(
 
 // HeadersMap default response headers
 var HeadersMap = map[string]string{
-	"Content-Type": "application/json",
+	"Content-Type":                "application/json",
+	"Access-Control-Allow-Origin": "*",
 }
 
 // ZuesRequestBody represent the POST body in a Http request

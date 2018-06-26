@@ -149,6 +149,13 @@ func (s *StressTest) ExecuteEnvironment() {
 	endTime := time.Now().UnixNano()
 	fmt.Printf("Elapsed time for test %s is %d ms\n", s.ID, ((endTime - startTime) / 1000000))
 	golog.Println(fmt.Sprintf("In-Memory tests: %+v", InMemoryTests))
+	// Closing any open wsConns
+	if pubsub.GetListenerCount(s.ID) > 0 {
+		_, err := pubsub.CloseChannel(s.ID)
+		if err != nil {
+			golog.Errorf("Error while closing channel: %s", err.Error())
+		}
+	}
 }
 
 func (s *StressTest) findTest(targetTestID int16) (*test, error) {

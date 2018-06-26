@@ -2,6 +2,7 @@ package server
 
 import (
 	"net"
+	"net/http"
 	pubsub "zues/dispatch"
 	"zues/stest"
 	"zues/util"
@@ -21,8 +22,14 @@ var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin:     allowOrigins,
 	}
 )
+
+func allowOrigins(r *http.Request) bool {
+	golog.Infof("Allowing socket connection from :%s", r.Header["Origin"][0])
+	return true
+}
 
 // Server holds all the necessary information for the zues HTTP API to function
 type Server struct {
