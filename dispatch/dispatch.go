@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/kataras/golog"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -92,11 +94,35 @@ func (c *Channel) AddListener(wsConn *websocket.Conn) (bool, error) {
 
 // Broadcast write a message to all the listeners waiting on a channel
 func (c *Channel) Broadcast(message interface{}) error {
-	for _, l := range c.listeners {
+	for i, l := range c.listeners {
 		err := websocket.WriteJSON(l.wsConn, message)
 		if err != nil {
-			return err
+			// Either the client has closed the connection or the connection was lost
+			// Removing the connection from the listeners
+			golog.Infof("removing wsConn from listeners slice.")
+			c.listeners = append(c.listeners[:i], c.listeners[i+1:]...)
+			c.lCount--
+			continue
 		}
 	}
 	return nil
+}
+
+// CloseChannel closes all the currently open socket connections
+func CloseChannel(channelName string) (uint32, error) {
+	if channelName == "" {
+		return 0, fmt.Errorf("channel name need to close a channel listeners")
+	}
+	c, ok := channels[channelName]
+	if !ok {
+		return 0, fmt.Errorf("channel with name %s not found", channelName)
+	}
+	var closedConn uint32
+	for _, l := range c.listeners {
+		l.wsConn.Close()
+		closedConn++
+	}
+	// Delete the channel
+	delete(channels, channelName)
+	return closedConn, nil
 }
