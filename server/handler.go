@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"zues/config"
 	pubsub "zues/dispatch"
 	"zues/stest"
@@ -12,18 +11,7 @@ import (
 	"github.com/kataras/iris"
 )
 
-func indexHandler(ctx iris.Context) {
-	configStr, err := ioutil.ReadFile("zues-config.yaml")
-	if err != nil {
-		golog.Error(err)
-	}
-	zuesBaseConfig, err := config.GetConfigFromYAML(configStr)
-	if err != nil {
-		golog.Error(err)
-	}
-
-	util.BuildResponse(ctx, zuesBaseConfig)
-}
+func indexHandler(ctx iris.Context) { util.BuildResponse(ctx, ZuesServer) }
 
 func getPods(ctx iris.Context) {}
 
