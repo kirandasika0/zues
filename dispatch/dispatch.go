@@ -113,6 +113,8 @@ func (c *Channel) Broadcast(message interface{}) error {
 // returns the number of closed socket connections and an error
 // if something goes wrong
 func CloseChannel(channelName string) (uint32, error) {
+	// TDOD: Transform this function to accept an interface so that we can close
+	// any type of connection
 	if channelName == "" {
 		return 0, fmt.Errorf("channel name need to close a channel listeners")
 	}
