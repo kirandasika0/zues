@@ -158,11 +158,9 @@ func (s *StressTest) ExecuteEnvironment() {
 	// Test is complete handling the aftermath
 	// Closing any open wsConns
 	if pubsub.GetListenerCount(s.ID) > 0 {
-		closedConn, err := pubsub.CloseChannel(s.ID)
+		_, err := pubsub.CloseChannel(s.ID)
 		if err != nil {
 			golog.Errorf("Error while closing channel: %s", err.Error())
-		} else {
-			golog.Infof("Closed %d websocket connections for id %s", closedConn, s.ID)
 		}
 	}
 }

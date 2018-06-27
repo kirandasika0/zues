@@ -100,7 +100,7 @@ func (c *Channel) Broadcast(message interface{}) error {
 		if err != nil {
 			// Either the client has closed the connection or the connection was lost
 			// Removing the connection from the listeners
-			golog.Infof("removing wsConn from listeners slice.")
+			golog.Debugf("Removing listener %d from channel %s", i, c.Name())
 			c.listeners = append(c.listeners[:i], c.listeners[i+1:]...)
 			c.lCount--
 			continue
@@ -129,5 +129,6 @@ func CloseChannel(channelName string) (uint32, error) {
 	}
 	// Delete the channel
 	delete(channels, channelName)
+	golog.Debugf("ChannelID: %s CLOSED", channelName)
 	return closedConn, nil
 }

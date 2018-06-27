@@ -24,13 +24,26 @@ var (
 		WriteBufferSize: 1024,
 		CheckOrigin:     allowOrigins,
 	}
+	// All the allowed client to connect to this server as a websocket
+	allowedWsOrigins = []string{
+		"http://localhost:8284",
+		"http://137.135.124.197",
+	}
 )
 
 func allowOrigins(r *http.Request) bool {
 	// TODO: Make this parametersized so that we can only allow certain client
 	// estabilish the websocket connection.
-	golog.Infof("Allowing socket connection from: %s", r.Header["Origin"][0])
-	return true
+	requestOrigin := r.Header["Origin"][0]
+	golog.Warnf("Attempt to establish websocket connection from %s", requestOrigin)
+	for _, o := range allowedWsOrigins {
+		if requestOrigin == o {
+			golog.Infof("Success in establising websocket connection by client %s", requestOrigin)
+			return true
+		}
+	}
+	golog.Errorf("Error establishing websocket connection by client %s", requestOrigin)
+	return false
 }
 
 // Server holds all the necessary information for the zues HTTP API to function
