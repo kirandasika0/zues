@@ -29,7 +29,7 @@ var (
 func allowOrigins(r *http.Request) bool {
 	// TODO: Make this parametersized so that we can only allow certain client
 	// estabilish the websocket connection.
-	golog.Infof("Allowing socket connection from :%s", r.Header["Origin"][0])
+	golog.Infof("Allowing socket connection from: %s", r.Header["Origin"][0])
 	return true
 }
 
