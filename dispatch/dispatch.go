@@ -1,4 +1,8 @@
+// Package dispatch implements a basic pubsub model to allow
+// other parts of the system to handle websockets connections with grace
 package dispatch
+
+// TODO: Need to update this package and abstract any type of websocket connection type
 
 import (
 	"fmt"
@@ -10,9 +14,6 @@ import (
 )
 
 var channels = map[string]*Channel{}
-
-// Dispatch package will implement a basic pubsub model to allow
-// other parts of the system to handle websockets connections with grace
 
 // Channel is a struct that represents a channel is a pubsub environment
 type Channel struct {
@@ -109,6 +110,8 @@ func (c *Channel) Broadcast(message interface{}) error {
 }
 
 // CloseChannel closes all the currently open socket connections
+// returns the number of closed socket connections and an error
+// if something goes wrong
 func CloseChannel(channelName string) (uint32, error) {
 	if channelName == "" {
 		return 0, fmt.Errorf("channel name need to close a channel listeners")

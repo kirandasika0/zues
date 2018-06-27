@@ -16,6 +16,11 @@ import (
 	yaml "github.com/ghodss/yaml"
 )
 
+var validCandidateServiceResponse = []string{
+	"e6e5a91d-fc33-4502-b64c-c224a273c41b",
+	"900a70ab-4509-4ebf-97e9-8f3c1c1aa697",
+}
+
 // New return an instance of the StressTest struct
 func New(config []byte) (*StressTest, error) {
 	var newStressTest StressTest
@@ -118,6 +123,7 @@ func (s *StressTest) ExecuteEnvironment() {
 	// Calculate number of chunks
 	nChunks := int(int(s.Spec.NumRequests) / MaxRoutineChunk)
 	for i := 0; i < nChunks; i++ {
+		// TODO: Refactor logging to make it better
 		golog.Infof("TEST: %s CHUNK: %d", s.ID, i+1)
 		// Creating a channel to wait for 25 requests to finish
 		chunkCompleteCh := make(chan struct{})
@@ -129,7 +135,7 @@ func (s *StressTest) ExecuteEnvironment() {
 
 		statUpdateDoneChan := make(chan struct{})
 
-		// This go routine is only triggered after MaxRoutuneChunk times
+		// This go routine is only triggered after MaxRoutineChunk times
 		s.localTelemetry.wg.Add(1)
 		go s.processWorkerResponse(statUpdateDoneChan, chunkCompleteCh)
 
@@ -149,11 +155,14 @@ func (s *StressTest) ExecuteEnvironment() {
 	endTime := time.Now().UnixNano()
 	fmt.Printf("Elapsed time for test %s is %d ms\n", s.ID, ((endTime - startTime) / 1000000))
 	golog.Println(fmt.Sprintf("In-Memory tests: %+v", InMemoryTests))
+	// Test is complete handling the aftermath
 	// Closing any open wsConns
 	if pubsub.GetListenerCount(s.ID) > 0 {
-		_, err := pubsub.CloseChannel(s.ID)
+		closedConn, err := pubsub.CloseChannel(s.ID)
 		if err != nil {
 			golog.Errorf("Error while closing channel: %s", err.Error())
+		} else {
+			golog.Infof("Closed %d websocket connections for id %s", closedConn, s.ID)
 		}
 	}
 }
@@ -224,7 +233,7 @@ func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- te
 		s.Spec.Selector["name"], incomingReq.Endpoint,
 		incomingReq.Body, incomingReq.Headers)
 	reqStartTime := time.Now().Unix()
-	statusCode, _, err := util.GetHTTPResponse(req)
+	statusCode, res, err := util.GetHTTPResponse(req)
 	elapsedTime := time.Now().Unix() - reqStartTime
 	tempStTelemetry := tempStatisticalTelemetry{elapsedTime: elapsedTime, testID: incomingReq.ID}
 	if err != nil {
@@ -235,6 +244,9 @@ func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- te
 		// golog.Errorf("ID: %s Error in status code expected %v got %d", s.ID, incomingReq.ValidResponseCodes, statusCode)
 		// Updating the errorChan to process error in request
 		errorChan <- tempStTelemetry
+		if !hasValidResponse(string(res), validCandidateServiceResponse) {
+			errorChan <- tempStTelemetry
+		}
 	} else {
 		// golog.Info(fmt.Sprintf("%s", res))
 		successChan <- tempStTelemetry
@@ -277,6 +289,15 @@ func isValidResponse(executedTest *test, responseStatusCode int16) bool {
 	return false
 }
 
+func hasValidResponse(response string, validResponse []string) bool {
+	for _, r := range validResponse {
+		if r == response {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan tempStatisticalTelemetry, statUpdateDoneChan <-chan struct{}) {
 
 	for {
@@ -284,7 +305,7 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan te
 		case exTest := <-successChan:
 			//golog.Infof("Success received for test %d", exTest.testID)
 			s.localTelemetry.updateMutex.Lock()
-			// Lock no ensure no race condition
+			// Lock to ensure no race condition
 			sTelemetry := &InMemoryTests[s.ID][exTest.testID-1]
 			// Update the parameters
 			sTelemetry.Success++
@@ -316,6 +337,12 @@ func (s *StressTest) updateStatisticalTelemetry(successChan, errorChan <-chan te
 			s.localTelemetry.updateMutex.Unlock()
 			if pubsub.GetListenerCount(s.ID) > 0 {
 				DispatchTestDataCh <- s.ID
+			}
+			// Update the status to completed if all the requests are done
+			if sTelemetry.Completed == sTelemetry.Total {
+				sTelemetry.Status = TestStatusCompleted
+				// Calculate duration
+				sTelemetry.Elapsed = time.Now().Unix() - sTelemetry.CreatedAt
 			}
 		case <-statUpdateDoneChan:
 			// Signal the main wg that you work is done

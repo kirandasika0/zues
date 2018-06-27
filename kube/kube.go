@@ -40,7 +40,6 @@ func New() *Sessionv1 {
 	var config *rest.Config
 	var err error
 	if os.Getenv("IN_CLUSTER") == "true" {
-		// TODO
 		config, err = rest.InClusterConfig()
 		if err != nil {
 			panic(err.Error())
@@ -205,29 +204,33 @@ func (s *Sessionv1) handlePodEvent() {
 	for {
 		select {
 		case pod := <-s.addedChan:
-			golog.Infof("ADDED Pod %s", pod.ObjectMeta.Name)
+			if pod != nil {
+				golog.Infof("ADDED Pod %s", pod.ObjectMeta.Name)
+			}
 		case pod := <-s.modifiedChan:
-			for _, c := range pod.Status.ContainerStatuses {
-				// Check if the container is terminated
-				if c.State.Terminated != nil {
-					golog.Infof("TERMINATION Pod: %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Terminated.Reason, c.RestartCount)
-				} else if c.State.Waiting != nil {
-					golog.Infof("WAITING Pod %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Waiting.Reason, c.RestartCount)
-				} else if c.State.Running != nil {
-					golog.Infof("RUNNING Pod %s StartedAt: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Running.StartedAt, c.RestartCount)
+			if pod != nil {
+				for _, c := range pod.Status.ContainerStatuses {
+					// Check if the container is terminated
+					if c.State.Terminated != nil {
+						golog.Infof("TERMINATION Pod: %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Terminated.Reason, c.RestartCount)
+					} else if c.State.Waiting != nil {
+						golog.Infof("WAITING Pod %s Status: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Waiting.Reason, c.RestartCount)
+					} else if c.State.Running != nil {
+						golog.Infof("RUNNING Pod %s StartedAt: %s Restarts: %d", pod.ObjectMeta.Name, c.State.Running.StartedAt, c.RestartCount)
+					}
 				}
-			}
-			jobID, err := config.MatchJobIDWithPod(pod.ObjectMeta.Name)
-			if err != nil {
-				golog.Errorf("Could not find JobID with Pod %s", pod.ObjectMeta.Name)
-				continue
-			}
-			config.JobPodsMap[jobID] = pod
-			// Delete the Pod if it has crossed the number of build errors
-			if deleteFlag, err := s.shouldTerminate(jobID); err != nil {
-				golog.Errorf(err.Error())
-			} else if deleteFlag {
-				s.DeletePod(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
+				jobID, err := config.MatchJobIDWithPod(pod.ObjectMeta.Name)
+				if err != nil {
+					golog.Errorf("Could not find JobID with Pod %s", pod.ObjectMeta.Name)
+					continue
+				}
+				config.JobPodsMap[jobID] = pod
+				// Delete the Pod if it has crossed the number of build errors
+				if deleteFlag, err := s.shouldTerminate(jobID); err != nil {
+					golog.Errorf(err.Error())
+				} else if deleteFlag {
+					s.DeletePod(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
+				}
 			}
 		case pod := <-s.errorChan:
 			if pod != nil {

@@ -27,6 +27,8 @@ var (
 )
 
 func allowOrigins(r *http.Request) bool {
+	// TODO: Make this parametersized so that we can only allow certain client
+	// estabilish the websocket connection.
 	golog.Infof("Allowing socket connection from :%s", r.Header["Origin"][0])
 	return true
 }
@@ -94,7 +96,7 @@ func getDefaultIrisConfiguration() iris.Configuration {
 }
 
 func registerRoutes(s *Server) {
-	// Application level routes
+	// server level routes
 	s.Application.Get("/", indexHandler)
 	s.Application.Get("/info", serverInfoHandler)
 	// kube package routes
@@ -113,6 +115,9 @@ func registerRoutes(s *Server) {
 	s.Application.Get("/test/status/stream/{job_id: string}", stressTestStatusStreamHandler)
 }
 
+// stressTestStreamDispatcher is a helper func that listens on the DispatchTestDataCh
+// (which is triggered only when an entire stress test is completed) and broadcasts
+// the statisticalTelemetryData to the websocket connections
 func stressTestStreamDispatcher() {
 	for {
 		select {
