@@ -8,7 +8,9 @@ WORKDIR $GOPATH/src/zues
 COPY . .
 RUN CGO_ENABLED=0 go install -a std
 RUN CGO_ENABLED=0 go build -ldflags '-d -w -s'
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build \ 
+    -ldflags "-X main.version=$(git rev-parse HEAD)" \ 
+    -a -installsuffix cgo -o main .
 
 
 FROM alpine

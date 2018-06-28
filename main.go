@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"time"
@@ -16,7 +17,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Replaced to approprate value with -ldflags
+var version = "development"
+
 func main() {
+	fmt.Printf("running version %s\n", version)
 	// Docker needs to use the 0.0.0.0 format to forward all requests
 	// to the server in the container
 	var networkString = "localhost:8284"
