@@ -109,6 +109,22 @@ func (c *Channel) Broadcast(message interface{}) error {
 	return nil
 }
 
+// BroadcastBinary broadcasts a slice of bytes to all listeners
+func (c *Channel) BroadcastBinary(message []byte) error {
+	for i, l := range c.listeners {
+		err := l.wsConn.WriteMessage(websocket.TextMessage, message)
+		if err != nil {
+			// Either the client has closed the connection or the connection was lost
+			// Removing the connection from the listeners
+			golog.Debugf("Removing listener %d from channel %s", i, c.Name())
+			c.listeners = append(c.listeners[:i], c.listeners[i+1:]...)
+			c.lCount--
+			continue
+		}
+	}
+	return nil
+}
+
 // CloseChannel closes all the currently open socket connections
 // returns the number of closed socket connections and an error
 // if something goes wrong
