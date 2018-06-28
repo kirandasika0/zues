@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"zues/config"
 	pubsub "zues/dispatch"
+	"zues/kube"
 	"zues/stest"
 	"zues/util"
 
@@ -100,4 +101,23 @@ func stressTestStatusStreamHandler(ctx iris.Context) {
 
 func listJobsHandler(ctx iris.Context) {
 	util.BuildResponse(ctx, config.CurrentJobs)
+}
+
+// TODO: This function should handle streaming all the logs to the client
+func jobLogStreamHandler(ctx iris.Context) {
+	jobID := ctx.Params().Get("job_id")
+	// Check if the job is in memory
+	// _, ok := stest.InMemoryTests[jobID]
+	// if !ok {
+	// 	util.BuildErrorResponse(ctx, fmt.Sprintf("Job with id %s not found", jobID))
+	// 	return
+	// }
+	wsConn, err := upgrader.Upgrade(ctx.ResponseWriter(), ctx.Request(), nil)
+	if err != nil {
+		golog.Error(err.Error())
+		util.BuildErrorResponse(ctx, err.Error())
+		return
+	}
+	// Invoke log tracking here
+	go kube.Session.StreamLogsToChannel("candidate-service", jobID+"-logs-stream", wsConn)
 }

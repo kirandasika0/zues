@@ -1,13 +1,18 @@
 package kube
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"strings"
 	"zues/config"
+	pubsub "zues/dispatch"
 	"zues/util"
 
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
 
+	"github.com/gorilla/websocket"
 	"github.com/kataras/golog"
 
 	"os"
@@ -29,6 +34,11 @@ type Sessionv1 struct {
 	modifiedChan chan *apiv1.Pod
 	errorChan    chan *apiv1.Pod
 }
+
+const (
+	// LogPollingFrequency is the polling duration in seconds
+	LogPollingFrequency = 2
+)
 
 var (
 	// Session is  used as a global variables throughout the program
@@ -74,6 +84,11 @@ func New() *Sessionv1 {
 	go s.handlePodEvent()
 
 	return &s
+}
+
+// Clientset returns the current instance of the kubernetes client config
+func (s *Sessionv1) Clientset() *kubernetes.Clientset {
+	return s.clientSet
 }
 
 // CreatePod create a pod
@@ -259,4 +274,60 @@ func (s *Sessionv1) shouldTerminate(jobID string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// StreamLogsToChannel stream the logs of all pods under a service to a give channel
+func (s *Sessionv1) StreamLogsToChannel(serviceName, channelName string, wsConn *websocket.Conn) {
+	// Setting up pubsub dependencies
+	c, err := pubsub.GetChannel(channelName)
+	if c == nil || err != nil {
+		// Create a new channel
+		c, err = pubsub.NewChannel(channelName)
+		if err != nil {
+			golog.Errorf("Error while creating channel: %s", err.Error())
+		}
+		isAdded, err := c.AddListener(wsConn)
+		if err != nil || !isAdded {
+			golog.Errorf("Error adding listener: %s", err.Error())
+		}
+	}
+	// Temp stategy: look for selector service name and for each pod in that service
+	// and query the logs
+	// TODO: change it to the active namespace within the system
+	tempNamespace := "sysz"
+	svc, err := s.Clientset().CoreV1().Services(tempNamespace).Get(serviceName, metav1.GetOptions{})
+	if err != nil || svc == nil {
+		return
+	}
+	appLabels := labels.Set(svc.Spec.Selector)
+	pods, err := s.Clientset().CoreV1().Pods(tempNamespace).List(metav1.ListOptions{LabelSelector: labels.FormatLabels(appLabels)})
+	for _, pod := range pods.Items {
+		logBytes := s.getLogsForPod(tempNamespace, pod.ObjectMeta.Name).Bytes()
+		if len(logBytes) > 1024 {
+			// Chunk the log output so that we don't have write timeouts to the websocket connections
+			offset := 0
+			offsetMax := 1024
+			for offset <= len(logBytes) {
+				c.BroadcastBinary(logBytes[offset:offsetMax])
+				offset += 1024
+				offsetMax += 1024
+			}
+		} else {
+			// Dump the entire log to the connection
+		}
+	}
+}
+
+// getLogsForPod is a helper function that queries the kubernetes api server for pod logs
+func (s *Sessionv1) getLogsForPod(namespace, podName string) *bytes.Buffer {
+	logReq := s.clientSet.RESTClient().Get().RequestURI("/api/v1/namespaces/" + namespace + "/pods/" + podName + "/log")
+	readerCloser, err := logReq.Stream()
+	if err != nil {
+		golog.Errorf(err.Error())
+		return nil
+	}
+	defer readerCloser.Close()
+	logBuff := bytes.NewBuffer([]byte(""))
+	io.Copy(logBuff, readerCloser)
+	return logBuff
 }

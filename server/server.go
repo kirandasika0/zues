@@ -28,6 +28,7 @@ var (
 	allowedWsOrigins = []string{
 		"http://localhost:8284",
 		"http://137.135.124.197",
+		"file://",
 	}
 )
 
@@ -125,6 +126,7 @@ func registerRoutes(s *Server) {
 	s.Application.Get("/test/status/{test_id: string}", stressTestStatusHandler)
 
 	// Stream handlers
+	s.Application.Get("/test/{job_id: string}/logs/stream", jobLogStreamHandler)
 	s.Application.Get("/test/status/stream/{job_id: string}", stressTestStatusStreamHandler)
 }
 
