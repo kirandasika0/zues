@@ -7,16 +7,17 @@ FINAL_IMAGE=""
 
 docker_build()
 {
+    GIT_TAG=$(git rev-parse HEAD)
     REGISTRY="acrQat.azurecr.io"
-    IMAGE_TAG="sysz-testing"
     DOCKER_FILE_DIR="."
+    IMAGE_TAG="sysz-testing"
     read -p 'CONTAINER REGISTRY (default:acrQat.azurecr.io): ' REGISTRY
-    read -p 'IMAGE TAG (default:sysz-testing)': IMAGE_TAG
+    read -p "IMAGE TAG (default: $GIT_TAG)": IMAGE_TAG
     if [ "$REGISTRY" = "" ]; then
         REGISTRY="acrQat.azurecr.io"
     fi
     if [ "$IMAGE_TAG" = "" ]; then
-        IMAGE_TAG="sysz-testing"
+        IMAGE_TAG=$GIT_TAG
     fi
     if [ "$DOCKER_FILE_DIR" = "" ]; then
         DOCKER_FILE_DIR="."
@@ -35,6 +36,7 @@ docker_push()
         echo "Pushing image $FINAL_IMAGE"
     fi
     docker push $FINAL_IMAGE
+    kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$FINAL_IMAGE
 }
 
 
