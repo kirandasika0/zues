@@ -12,6 +12,7 @@ import (
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	recover2 "github.com/kataras/iris/middleware/recover"
+	"github.com/rs/xid"
 )
 
 var (
@@ -67,7 +68,18 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	s.Application = iris.New()
 	s.Application.Logger().SetLevel("debug")
 	s.Application.Use(recover2.New())
-	s.Application.Use(logger.New())
+	s.Application.UseGlobal(before)
+
+	// Log config
+	logConfig := logger.Config{
+		Status:            true,
+		IP:                true,
+		Method:            true,
+		Path:              true,
+		MessageHeaderKeys: []string{"X-Trace-Id"},
+	}
+	customLogger := logger.New(logConfig)
+	s.Application.Use(customLogger)
 
 	// Register all the routes to the server
 	registerRoutes(&s)
@@ -129,6 +141,15 @@ func registerRoutes(s *Server) {
 	// Stream handlers
 	s.Application.Get("/test/{job_id: string}/logs/stream", jobLogStreamHandler)
 	s.Application.Get("/test/status/stream/{job_id: string}", stressTestStatusStreamHandler)
+}
+
+func before(ctx iris.Context) {
+	// Check for trace header
+	_, ok := ctx.Request().Header["X-Trace-Id"]
+	if !ok {
+		ctx.Request().Header.Set("X-Trace-Id", xid.New().String())
+	}
+	ctx.Next()
 }
 
 // stressTestStreamDispatcher is a helper func that listens on the DispatchTestDataCh

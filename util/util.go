@@ -2,9 +2,7 @@ package util
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -135,8 +133,9 @@ func BuildResponse(ctx iris.Context, responseData interface{}) error {
 	}
 	SetResponseHeaders(ctx.ResponseWriter(),
 		map[string]string{
-			"X-Request-ID": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
-		})
+			"X-Trace-Id": ctx.Request().Header["X-Trace-Id"][0],
+		},
+	)
 	ctx.StatusCode(iris.StatusOK)
 	ctx.JSON(responseData)
 	return nil
@@ -146,8 +145,9 @@ func BuildResponse(ctx iris.Context, responseData interface{}) error {
 func BuildErrorResponse(ctx iris.Context, errorString string) {
 	SetResponseHeaders(ctx.ResponseWriter(),
 		map[string]string{
-			"X-Trace-Id": fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix())))),
-		})
+			"X-Trace-Id": ctx.Request().Header["X-Trace-Id"][0],
+		},
+	)
 	ctx.StatusCode(iris.StatusInternalServerError)
 	ctx.JSON(map[string]string{
 		"error": errorString,
