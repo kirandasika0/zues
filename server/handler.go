@@ -16,6 +16,17 @@ func indexHandler(ctx iris.Context) { util.BuildResponse(ctx, ZuesServer) }
 
 func getPods(ctx iris.Context) {}
 
+func livelinessProbeHandler(ctx iris.Context) {
+	hasLivenessProbeHeader := ctx.Request().Header.Get("X-Liveness-Probe-Test")
+	if hasLivenessProbeHeader != "" {
+		ctx.StatusCode(iris.StatusOK)
+		ctx.Write([]byte("ok"))
+		return
+	}
+
+	ctx.StatusCode(iris.StatusInternalServerError)
+}
+
 func stressTestHandler(ctx iris.Context) {
 	// Procedure to set up stress tests
 	// 1. Read the POST body for the incoming request

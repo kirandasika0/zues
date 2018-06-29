@@ -27,5 +27,14 @@ spec:
                   configMapKeyRef:
                     name: cluster-config
                     key: in-cluster
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8284
+              httpHeaders:
+                - name: X-Liveness-Probe-Test
+                  value: "true"
+            initialDelaySeconds: 8
+            periodSeconds: 300
       imagePullSecrets:
         - name: secqat

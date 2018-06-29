@@ -113,6 +113,7 @@ func registerRoutes(s *Server) {
 	// server level routes
 	s.Application.Get("/", indexHandler)
 	s.Application.Get("/info", serverInfoHandler)
+	s.Application.Get("/healthz", livelinessProbeHandler)
 	// kube package routes
 	s.Application.Get("/jobs", listJobsHandler)
 	s.Application.Get("/{namespace:string}/pods", getPods)
