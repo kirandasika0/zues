@@ -34,7 +34,7 @@ spec:
               httpHeaders:
                 - name: X-Liveness-Probe-Test
                   value: "true"
-            initialDelaySeconds: 8
-            periodSeconds: 300
+            initialDelaySeconds: 5
+            periodSeconds: 30
       imagePullSecrets:
         - name: secqat
