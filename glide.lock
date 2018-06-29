@@ -1,5 +1,5 @@
-hash: dd0b5e06bfbcfb0ec3fa73b0f86e7b792af1619687f0a7cf1d0b14cd404b5584
-updated: 2018-06-25T15:46:40.6951917-04:00
+hash: 4f209a3209739f36d7d1c25e87ec1cb85724d9eecb00f65a2fea13e6ed86652c
+updated: 2018-06-29T15:16:20.4310054-04:00
 imports:
 - name: github.com/aymerick/raymond
   version: b565731e1464263de0bda75f2e45d97b54b60110
@@ -63,7 +63,7 @@ imports:
 - name: github.com/kataras/golog
   version: 03be101463868edc5a81f094fc68a5f6c1b5503a
 - name: github.com/kataras/iris
-  version: 964fba44cf4f4b2e94b2cbd54fbbf4d264795df7
+  version: eba6adbd78bb547b220f7fe7fbda331532134e87
   subpackages:
   - cache
   - cache/cfg
@@ -100,7 +100,7 @@ imports:
   - core
   - terminal
 - name: github.com/klauspost/compress
-  version: 5fb1f31b0a61e9858f12f39266e059848a5f1cea
+  version: a17685a03bf4c0a9219e110eb90e028b36193570
   subpackages:
   - flate
   - gzip
@@ -114,6 +114,8 @@ imports:
   version: 9520e82c474b0a04dd04f8a40959027271bab992
 - name: github.com/microcosm-cc/bluemonday
   version: f0761eb8ed07c1cc892ef631b00c33463b9b6868
+- name: github.com/rs/xid
+  version: 2c7e97ce663ff82c49656bca3048df0fdd83c5f9
 - name: github.com/ryanuber/columnize
   version: abc90934186a77966e2beeac62ed966aac0561d5
 - name: github.com/satori/go.uuid
@@ -167,7 +169,7 @@ imports:
   subpackages:
   - rate
 - name: google.golang.org/genproto
-  version: 80063a038e333bbe006c878e4c5ce4c74d055498
+  version: ff3583edef7de132f219f0efc00e097cabcc0ec0
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
