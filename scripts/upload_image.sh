@@ -35,8 +35,18 @@ docker_push()
     else
         echo "Pushing image $FINAL_IMAGE"
     fi
+    PWD=$(pwd)
     docker push $FINAL_IMAGE
-    kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$FINAL_IMAGE
+    IS_DEP=$(kubectl get deployments -o name | grep $SERVICE_NAME)
+    if [[ "$IS_DEP" == "" ]]; then
+        kubectl create -f $PWD/clusterinfo/deployment.yaml
+    else
+        kubectl set image deployment/$SERVICE_NAME $SERVICE_NAME=$FINAL_IMAGE
+    fi
+    HAS_SVC=$(kubectl get svc -o name | grep $SERVICE_NAME)
+    if [[ "$HAS_SVC" == "" ]]; then
+        kubectl create -f $PWD/clusterinfo/service.yaml
+    fi
 }
 
 
