@@ -1,15 +1,20 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"time"
 	"zues/config"
 	pubsub "zues/dispatch"
 	"zues/kube"
+	log_sidecar "zues/logsidecar/logsidecar"
 	"zues/stest"
 	"zues/util"
 
 	"github.com/kataras/golog"
 	"github.com/kataras/iris"
+	"google.golang.org/grpc"
 )
 
 func indexHandler(ctx iris.Context) { util.BuildResponse(ctx, ZuesServer) }
@@ -135,4 +140,20 @@ func jobLogStreamHandler(ctx iris.Context) {
 
 func logsUploadHandler(ctx iris.Context) {
 	golog.Debug("Need to trigger a log upload")
+	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	networkString := "localhost:49449"
+	if os.Getenv("IN_CLUSTER") != "" {
+		networkString = "0.0.0.0:49449"
+	}
+	conn, err := grpc.Dial(networkString, grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+	client := log_sidecar.NewSidecarClient(conn)
+	res, err := client.GetStatus(c, &log_sidecar.Void{})
+	if err != nil {
+		panic(err)
+	}
+	golog.Debugf("%v", res)
 }

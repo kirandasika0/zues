@@ -44,6 +44,31 @@ spec:
           volumeMounts:
             - name: logvolume
               mountPath: /var/log
+        # # Sidecar Container
+        # - name: log-sidecar
+        #   image: acrQat.azurecr.io/sysz-log-sidecar:latest
+        #   imagePullPolicy: Always
+        #   ports:
+        #     - containerPort: 40449
+        #   env:
+        #     - name: DOCKER_ENV
+        #       valueFrom:
+        #           configMapKeyRef:
+        #             name: sysz-sidecar-config
+        #             key: docker-env
+        #     - name: SIDECAR_PORT
+        #       valueFrom:
+        #         configMapKeyRef:
+        #           name: sysz-sidecar-config
+        #           key: sidecar-port
+        #   volumeMounts:
+        #     - name: logvolume
+        #       mountPath: /var/log
+        #   livenessProbe:
+        #     tcpSocket:
+        #       port: 49449
+        #     initialDelaySeconds: 5
+        #     periodSeconds: 30
       volumes:
       - name: logvolume
         emptyDir: {}

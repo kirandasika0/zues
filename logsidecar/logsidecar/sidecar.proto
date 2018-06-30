@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service Sidecar {
+    rpc GetStatus(Void) returns (SidecarStatus) {}
+    rpc ConfigureSidecar(SidecarBasicConfig) returns (SidecarStatus) {}
+}
+
+message Void {}
+message SidecarStatus {
+    string id = 1;
+    string health = 2;
+    string bytesProcessed = 3;
+    string upStreamURL = 4;
+}
+
+message SidecarBasicConfig {
+    string upStreamURL = 1;
+}
