@@ -61,7 +61,7 @@ func main() {
 
 func serveHTTPServer(l net.Listener) error {
 	golog.Info("Starting HTTP server...")
-	server.ZuesServer = server.New(nil, "")
+	server.ZuesServer = server.New(nil, "", version)
 	server.ZuesServer.Start(l)
 	return nil
 }

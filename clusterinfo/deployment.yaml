@@ -36,5 +36,11 @@ spec:
                   value: "true"
             initialDelaySeconds: 5
             periodSeconds: 30
+          volumeMounts:
+            - name: logvolume
+              mountPath: /var/log
+      volumes:
+      - name: logvolume
+        emptyDir: {}
       imagePullSecrets:
         - name: secqat

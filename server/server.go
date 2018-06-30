@@ -3,6 +3,7 @@ package server
 import (
 	"net"
 	"net/http"
+	"os"
 	pubsub "zues/dispatch"
 	"zues/stest"
 	"zues/util"
@@ -58,7 +59,7 @@ type Server struct {
 }
 
 // New creates a new instance of the zues server
-func New(serverConfig *iris.Configuration, serverPort string) *Server {
+func New(serverConfig *iris.Configuration, serverPort, version string) *Server {
 	var s Server
 	if serverConfig == nil {
 		s.Configuration = getDefaultIrisConfiguration()
@@ -66,9 +67,18 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 
 	// Start up a new Iris Application
 	s.Application = iris.New()
-	s.Application.Logger().SetLevel("debug")
 	s.Application.Use(recover2.New())
 	s.Application.UseGlobal(before)
+
+	if len(serverPort) < 1 {
+		// Set default port to localhost 8284
+		s.Port = ":8284"
+	} else {
+		s.Port = serverPort
+	}
+
+	s.ServerID = "zues-master-" + util.RandomString(8)
+	s.Health = "ok"
 
 	// Log config
 	logConfig := logger.Config{
@@ -80,19 +90,14 @@ func New(serverConfig *iris.Configuration, serverPort string) *Server {
 	}
 	customLogger := logger.New(logConfig)
 	s.Application.Use(customLogger)
-
+	s.Application.Logger().SetLevel("debug")
+	file, err := logFile(s.ServerID, version)
+	if err != nil {
+		panic(err)
+	}
+	s.Application.Logger().AddOutput(file)
 	// Register all the routes to the server
 	registerRoutes(&s)
-
-	if len(serverPort) < 1 {
-		// Set default port to localhost 8284
-		s.Port = ":8284"
-	} else {
-		s.Port = serverPort
-	}
-
-	s.ServerID = "zues-master-" + util.RandomString(8)
-	s.Health = "ok"
 
 	// Handle streaming testData back to the connected websockets
 	go stressTestStreamDispatcher()
@@ -172,4 +177,17 @@ func stressTestStreamDispatcher() {
 			}
 		}
 	}
+}
+
+// logFile opens a new log file and returns it to the main control
+func logFile(serverID, version string) (*os.File, error) {
+	var file *os.File
+	var err error
+	if os.Getenv("IN_CLUSTER") != "" {
+		// TODO: create the file in the log volume mount
+		file, err = os.OpenFile("/var/log/"+serverID+"-"+version+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	} else {
+		file, err = os.OpenFile(serverID+"-"+version+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	}
+	return file, err
 }
