@@ -6,3 +6,4 @@ main
 zues
 client/client
 kubeconfig
+*.log

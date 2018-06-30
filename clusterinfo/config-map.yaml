@@ -6,3 +6,13 @@ kind: ConfigMap
 metadata:
   name: sysz-config
   namespace: sysz
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sysz-sidecar-config
+  namespace: sysz
+data:
+  docker-env: "true"
+  in-cluster: "true"
+  sidecar-port: "49449"

@@ -132,3 +132,7 @@ func jobLogStreamHandler(ctx iris.Context) {
 	// Invoke log tracking here
 	go kube.Session.StreamLogsToChannel("candidate-service", jobID+"-logs-stream", wsConn)
 }
+
+func logsUploadHandler(ctx iris.Context) {
+	golog.Debug("Need to trigger a log upload")
+}

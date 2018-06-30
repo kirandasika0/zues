@@ -1,0 +1,13 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: log-upload
+  namespace: sysz
+spec:
+  schedule: "* * * * * *"
+  template:
+    spec:
+      containers:
+        - name: log-trigger
+          image: debian
+          command: ["curl http://sysz-service.sysz.svc.cluster.local/logs/trigger/upload"]
