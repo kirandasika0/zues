@@ -25,8 +25,13 @@ spec:
             - name: IN_CLUSTER
               valueFrom:
                   configMapKeyRef:
-                    name: cluster-config
+                    name: sysz-config
                     key: in-cluster
+            - name: DOCKER_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: sysz-config
+                  key: docker-env
           livenessProbe:
             httpGet:
               path: /healthz

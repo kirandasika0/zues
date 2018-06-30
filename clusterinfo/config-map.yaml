@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  in-cluster: "true"
+  docker-env: "true"
+kind: ConfigMap
+metadata:
+  name: sysz-config
+  namespace: sysz

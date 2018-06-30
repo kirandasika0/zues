@@ -16,8 +16,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 FROM alpine
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
-ENV DOCKER_ENV=true
-ENV IN_CLUSTER=true
 WORKDIR /zues
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN mkdir ~/.kube
