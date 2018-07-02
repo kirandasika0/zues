@@ -149,7 +149,8 @@ func logsUploadHandler(ctx iris.Context) {
 	client := log_sidecar.NewSidecarClient(conn)
 	res, err := client.GetStatus(c, &log_sidecar.Void{})
 	if err != nil {
-		panic(err)
+		golog.Error(err)
+		return
 	}
 	golog.Debugf("%v", res)
 }
