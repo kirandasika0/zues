@@ -91,11 +91,13 @@ func New(serverConfig *iris.Configuration, serverPort, version string) *Server {
 	customLogger := logger.New(logConfig)
 	s.Application.Use(customLogger)
 	s.Application.Logger().SetLevel("debug")
-	file, err := logFile(s.ServerID, version)
-	if err != nil {
-		panic(err)
+	if os.Getenv("IN_CLUSTER") != "" {
+		file, err := logFile(s.ServerID, version)
+		if err != nil {
+			panic(err)
+		}
+		s.Application.Logger().AddOutput(file)
 	}
-	s.Application.Logger().AddOutput(file)
 	// Register all the routes to the server
 	registerRoutes(&s)
 

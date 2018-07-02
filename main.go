@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"time"
 	"zues/kube"
 	pb "zues/proto"
@@ -14,7 +16,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/soheilhy/cmux"
-	"golang.org/x/sync/errgroup"
 )
 
 // Replaced to approprate value with -ldflags
@@ -44,19 +45,31 @@ func main() {
 	grpcListener := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
 	httpListener := m.Match(cmux.HTTP1Fast())
 
-	g := new(errgroup.Group)
-	g.Go(func() error { return servegRPCServer(grpcListener) })
-	g.Go(func() error { return serveHTTPServer(httpListener) })
-	g.Go(func() error { return m.Serve() })
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
 
-	// Start watching on the Pod events
+	go serveHTTPServer(httpListener)
+	go servegRPCServer(grpcListener)
+
 	go func() {
 		select {
 		case <-time.After(2 * time.Second):
 			startWatch <- struct{}{}
 		}
 	}()
-	g.Wait()
+
+	<-c
+
+	golog.Debug("Shutting down servers gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err = server.ZuesServer.Application.Shutdown(ctx); err != nil {
+		golog.Error("error while shutting down gracefully...")
+		golog.Debug("falling back to hard terminate")
+		os.Exit(1)
+	}
 }
 
 func serveHTTPServer(l net.Listener) error {
