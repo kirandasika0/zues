@@ -46,10 +46,10 @@ spec:
               mountPath: /var/log
         # # Sidecar Container
         # - name: log-sidecar
-        #   image: acrQat.azurecr.io/sysz-log-sidecar:latest
+        #   image: acrQat.azurecr.io/sysz-logsidecar:latest
         #   imagePullPolicy: Always
         #   ports:
-        #     - containerPort: 40449
+        #     - containerPort: 49449
         #   env:
         #     - name: DOCKER_ENV
         #       valueFrom:

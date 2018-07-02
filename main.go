@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 	"zues/kube"
-	pb "zues/proto"
+	pb "zues/proto/server"
 	"zues/rpc"
 	"zues/server"
 
@@ -51,6 +51,7 @@ func main() {
 
 	go serveHTTPServer(httpListener)
 	go servegRPCServer(grpcListener)
+	go m.Serve()
 
 	go func() {
 		select {

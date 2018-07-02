@@ -3,12 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 	"zues/config"
 	pubsub "zues/dispatch"
 	"zues/kube"
-	log_sidecar "zues/logsidecar/logsidecar"
+	log_sidecar "zues/proto/logsidecar"
 	"zues/stest"
 	"zues/util"
 
@@ -143,9 +142,6 @@ func logsUploadHandler(ctx iris.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	networkString := "localhost:49449"
-	if os.Getenv("IN_CLUSTER") != "" {
-		networkString = "0.0.0.0:49449"
-	}
 	conn, err := grpc.Dial(networkString, grpc.WithInsecure())
 	if err != nil {
 		panic(err)

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
-	pb "zues/proto"
+	pb "zues/proto/server"
 	"zues/util"
 
 	"github.com/kataras/golog"

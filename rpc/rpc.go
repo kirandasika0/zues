@@ -6,7 +6,7 @@ import (
 	"time"
 	"zues/config"
 	"zues/kube"
-	pb "zues/proto"
+	pb "zues/proto/server"
 	"zues/server"
 	"zues/util"
 
