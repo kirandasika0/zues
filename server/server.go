@@ -56,6 +56,7 @@ type Server struct {
 	ServerID      string             `json:"serverId"`
 	Configuration iris.Configuration `json:"-"`
 	Health        string             `json:"health"`
+	LogFile       string             `json:"log_file"`
 }
 
 // New creates a new instance of the zues server
@@ -92,9 +93,10 @@ func New(serverConfig *iris.Configuration, serverPort, version string) *Server {
 	s.Application.Use(customLogger)
 	s.Application.Logger().SetLevel("debug")
 	if os.Getenv("IN_CLUSTER") != "" {
-		file, err := logFile(s.ServerID, version)
+		file, fileName, err := logFile(s.ServerID, version)
+		s.LogFile = fileName
 		if err != nil {
-			panic(err)
+			golog.Errorf("Could not create a log file")
 		}
 		s.Application.Logger().AddOutput(file)
 	}
@@ -183,14 +185,14 @@ func stressTestStreamDispatcher() {
 }
 
 // logFile opens a new log file and returns it to the main control
-func logFile(serverID, version string) (*os.File, error) {
+func logFile(serverID, version string) (*os.File, string, error) {
 	var file *os.File
-	var err error
+	fileName := "/var/log/" + serverID + "-" + version + ".log"
 	if os.Getenv("IN_CLUSTER") != "" {
 		// TODO: create the file in the log volume mount
-		file, err = os.OpenFile("/var/log/"+serverID+"-"+version+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, _ = os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	} else {
-		file, err = os.OpenFile(serverID+"-"+version+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, _ = os.OpenFile(serverID+"-"+version+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	}
-	return file, err
+	return file, fileName, nil
 }

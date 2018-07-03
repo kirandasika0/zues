@@ -18,11 +18,16 @@ import (
 	"github.com/soheilhy/cmux"
 )
 
-// Replaced to approprate value with -ldflags
-var version = "development"
+// LD_FLAGS
+
+// Version is used to point at the type of build that is being run; default is development
+var Version = "development"
+
+// BuildTime is used to point at the time this code is compiled
+var BuildTime = time.Now().String()
 
 func main() {
-	fmt.Printf("running version %s\n", version)
+	fmt.Printf("\t\t\tZUES CONTROL SERVER | Version %s Built: %s\n\n", Version, BuildTime)
 	// Docker needs to use the 0.0.0.0 format to forward all requests
 	// to the server in the container
 	var networkString = "localhost:8284"
@@ -75,7 +80,7 @@ func main() {
 
 func serveHTTPServer(l net.Listener) error {
 	golog.Info("Starting HTTP server...")
-	server.ZuesServer = server.New(nil, "", version)
+	server.ZuesServer = server.New(nil, "", Version)
 	server.ZuesServer.Start(l)
 	return nil
 }
