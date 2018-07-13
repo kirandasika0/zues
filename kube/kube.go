@@ -92,8 +92,10 @@ func (s *Sessionv1) Clientset() *kubernetes.Clientset {
 }
 
 // CreatePod create a pod
-func (s *Sessionv1) CreatePod(serviceName, namespace string, labels map[string]string, container apiv1.Container) (*apiv1.Pod, error) {
-	podName := strings.ToLower(serviceName + "-" + util.RandomString(5) + "-" + util.RandomString(5))
+func (s *Sessionv1) CreatePod(serviceName, namespace string,
+	labels map[string]string, container apiv1.Container) (*apiv1.Pod, error) {
+	podName := strings.ToLower(serviceName + "-" + util.RandomString(5)
+														+ "-" + util.RandomString(5))
 	pod, err := s.clientSet.CoreV1().Pods(namespace).Create(&apiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,

@@ -76,6 +76,7 @@ func main() {
 		golog.Debug("falling back to hard terminate")
 		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func serveHTTPServer(l net.Listener) error {
