@@ -1,7 +1,7 @@
+TIME=$(shell date +"%d-%m-%y")
 build:
-	go build -o zues main.go
+	go build -o zues -ldflags "-w -s -X main.BuildTime=$(TIME)" main.go
 run:
-	make build
-	./zues
+	DOCKER_ENV=true ./zues
 clean:
 	rm zues
