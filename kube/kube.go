@@ -46,13 +46,13 @@ var (
 )
 
 // New Create a new kuberentes session
-func New() *Sessionv1 {
+func New() (*Sessionv1, error) {
 	var config *rest.Config
 	var err error
 	if os.Getenv("IN_CLUSTER") == "true" {
 		config, err = rest.InClusterConfig()
 		if err != nil {
-			panic(err.Error())
+			return nil, fmt.Errorf("error while creating a kube session")
 		}
 	} else {
 		var kubeconfig string
@@ -60,7 +60,7 @@ func New() *Sessionv1 {
 		// use the current context in kubeconfig
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			panic(err.Error())
+			return nil, fmt.Errorf("error while creating a local kube session. file not available")
 		}
 	}
 	// create the clientset
@@ -83,7 +83,7 @@ func New() *Sessionv1 {
 	// Will be monitoring all the different events behind the scenes
 	go s.handlePodEvent()
 
-	return &s
+	return &s, nil
 }
 
 // Clientset returns the current instance of the kubernetes client config
@@ -94,8 +94,7 @@ func (s *Sessionv1) Clientset() *kubernetes.Clientset {
 // CreatePod create a pod
 func (s *Sessionv1) CreatePod(serviceName, namespace string,
 	labels map[string]string, container apiv1.Container) (*apiv1.Pod, error) {
-	podName := strings.ToLower(serviceName + "-" + util.RandomString(5)
-														+ "-" + util.RandomString(5))
+	podName := strings.ToLower(serviceName + "-" + util.RandomString(5) + "-" + util.RandomString(5))
 	pod, err := s.clientSet.CoreV1().Pods(namespace).Create(&apiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -332,4 +331,19 @@ func (s *Sessionv1) getLogsForPod(namespace, podName string) *bytes.Buffer {
 	logBuff := bytes.NewBuffer([]byte(""))
 	io.Copy(logBuff, readerCloser)
 	return logBuff
+}
+
+// Stop is a required interface method needed to
+// be implmented by every service in suture
+func (s *Sessionv1) Stop() {
+	s = nil
+	return
+}
+
+// Serve is a required interface method needed to
+// be implmented by every service in suture
+func (s *Sessionv1) Serve() {
+	start_watch := make(chan struct{})
+	go s.WatchPodEvents(start_watch)
+	start_watch <- struct{}{}
 }

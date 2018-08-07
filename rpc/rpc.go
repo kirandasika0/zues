@@ -101,11 +101,6 @@ func (s *GRPCServer) JobDetails(ctx context.Context, req *pb.JobRequest) (*pb.Jo
 		ErrorsOccured:   restarts,
 		ContainerStatus: &containerStatus,
 	}
-	// if containerStatus.Reason != "" {
-	// 	golog.Infof("JobID: %s Pod: %s Status: %s", req.JobID, jobPod.ObjectMeta.Name, containerStatus.Reason)
-	// } else {
-	// 	golog.Infof("JobID: %s Pod: %s Status: %s", req.JobID, jobPod.ObjectMeta.Name, containerStatus.State)
-	// }
 	return jobResponse, nil
 }
 

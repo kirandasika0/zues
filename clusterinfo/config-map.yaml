@@ -5,13 +5,13 @@ data:
 kind: ConfigMap
 metadata:
   name: sysz-config
-  namespace: sysz
+  namespace: pf-testing
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sysz-sidecar-config
-  namespace: sysz
+  namespace: pf-testing
 data:
   docker-env: "true"
   in-cluster: "true"

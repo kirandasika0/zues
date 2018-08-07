@@ -91,7 +91,7 @@ func New(serverConfig *iris.Configuration, serverPort, version string) *Server {
 	}
 	customLogger := logger.New(logConfig)
 	s.Application.Use(customLogger)
-	s.Application.Logger().SetLevel("debug")
+	s.Application.Logger().SetLevel("error")
 	if os.Getenv("IN_CLUSTER") != "" {
 		file, fileName, err := logFile(s.ServerID, version)
 		s.LogFile = fileName

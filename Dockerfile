@@ -20,6 +20,6 @@ WORKDIR /zues
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN mkdir ~/.kube
 COPY --from=build-env $GOPATH/src/zues/main .
-COPY ./kubeconfig .
+#COPY ./kubeconfig .
 EXPOSE 8284
 ENTRYPOINT [ "./main" ]

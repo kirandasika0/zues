@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 	pubsub "zues/dispatch"
+	"zues/probe"
 	"zues/util"
 
 	"github.com/kataras/golog"
@@ -74,18 +75,22 @@ func (s *StressTest) InitStressTestEnvironment() error {
 	// SERVICE DISCOVERY
 	// First estabilish a TCP connection and check to see if service is running
 
-	/*
-		* TODO change from localhost to acutal service name in future
-		* Use the selector name from the pod as the service name default
-		unless specified
-	*/
+	// check port or default
+	// Defaulting to 80 as HTTP incoming port
 	if s.Spec.ServerPort == 0 {
-		// Defaulting to 80 as HTTP incoming port
 		s.Spec.ServerPort = 80
 	}
-	if !util.HasTCPConnection(s.Spec.Selector["name"], fmt.Sprintf(":%d", s.Spec.ServerPort)) {
-		return errors.New("Unable to contact host server. Tried to establish a TCP connection")
+	p, err := probe.NewTCPProbe(s.Spec.Selector["name"], fmt.Sprintf(":%d", s.Spec.ServerPort))
+	if err != nil {
+		return err
 	}
+	// run the probe
+	if err := p.Probe(); err != nil {
+		return err
+	}
+	// if !util.HasTCPConnection(s.Spec.Selector["name"], fmt.Sprintf(":%d", s.Spec.ServerPort)) {
+	// 	return errors.New("Unable to contact host server. Tried to establish a TCP connection")
+	// }
 
 	// Queue up all the requests in order
 	// Scheduler used throughout the testing phase
@@ -239,12 +244,9 @@ func (s *StressTest) runTest(incomingReq *test, successChan, errorChan chan<- te
 	}
 	// Check to see if the response codes are correct
 	if !isValidResponse(incomingReq, int16(statusCode)) {
-		// golog.Errorf("ID: %s Error in status code expected %v got %d", s.ID, incomingReq.ValidResponseCodes, statusCode)
+		golog.Errorf("ID: %s Error in status code expected %v got %d\nString:%s", s.ID, incomingReq.ValidResponseCodes, statusCode, res)
 		// Updating the errorChan to process error in request
 		errorChan <- tempStTelemetry
-		if !hasValidResponse(string(res), validCandidateServiceResponse) {
-			errorChan <- tempStTelemetry
-		}
 	} else {
 		// golog.Info(fmt.Sprintf("%s", res))
 		successChan <- tempStTelemetry
